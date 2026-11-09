@@ -1,6 +1,6 @@
 // Service worker: lets the site load offline and be installed. Generated into sw.js by scripts/assemble.js.
 // The cache name below changes whenever the built site changes, which replaces the old cache.
-const CACHE='fotw-a09f6742fd';
+const CACHE='fotw-cd12aa8e5c';
 const CORE=['./','manifest.webmanifest','icons/icon-192.png','icons/icon-512.png','icons/apple-touch-icon.png','map.json?v=2d9e17ee8e'];
 const FONT_HOSTS=['fonts.googleapis.com','fonts.gstatic.com'];
 

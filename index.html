@@ -35,6 +35,7 @@ if(location.hostname==='calebsylvest.github.io')location.replace('https://www.ca
   --bg:#F4F5F7;--surface:#FFFFFF;--ink:#171B24;--muted:#5A6373;--line:#D9DDE4;--soft:#E9ECF0;
   --accent:#1F3F8F;--accent-ink:#FFFFFF;--good:#1C7A48;--good-bg:#E3F3EA;--bad:#B8322A;--bad-bg:#FBE6E3;
   --flag-edge:rgba(23,27,36,.14);--sea:#DCE3EC;--land:#FFFFFF;--border:#BCC4D0;--grp:#BFCBEA;
+  --chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%235A6373' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --display:"Big Shoulders Display","Arial Narrow","Helvetica Neue",Arial,sans-serif;
   --body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
   color-scheme:light;
@@ -44,11 +45,11 @@ if(location.hostname==='calebsylvest.github.io')location.replace('https://www.ca
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#12151B;--surface:#1B1F28;--ink:#ECEEF2;--muted:#9AA3B2;--line:#2E3440;--soft:#242A35;
   --accent:#9DB2FF;--accent-ink:#0E1630;--good:#5FD39A;--good-bg:#173226;--bad:#FF8A7E;--bad-bg:#3A1C1A;
-  --flag-edge:rgba(255,255,255,.16);--sea:#161B24;--land:#323A47;--border:#12151B;--grp:#45537A;color-scheme:dark}}
+  --flag-edge:rgba(255,255,255,.16);--sea:#161B24;--land:#323A47;--border:#12151B;--grp:#45537A;--chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%239AA3B2' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#12151B;--surface:#1B1F28;--ink:#ECEEF2;--muted:#9AA3B2;--line:#2E3440;--soft:#242A35;
   --accent:#9DB2FF;--accent-ink:#0E1630;--good:#5FD39A;--good-bg:#173226;--bad:#FF8A7E;--bad-bg:#3A1C1A;
-  --flag-edge:rgba(255,255,255,.16);--sea:#161B24;--land:#323A47;--border:#12151B;--grp:#45537A;color-scheme:dark}
+  --flag-edge:rgba(255,255,255,.16);--sea:#161B24;--land:#323A47;--border:#12151B;--grp:#45537A;--chev:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%239AA3B2' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");color-scheme:dark}
 *,*::before,*::after{box-sizing:inherit}
 html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 72px)}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
@@ -94,7 +95,10 @@ nav a[aria-current="page"]{background:var(--ink);color:var(--bg)}
 .search{flex:1 1 260px;position:relative}
 .search input{width:100%;height:52px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:0 16px 0 44px;font-size:1.0625rem}
 .search svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--muted)}
-select{height:52px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:0 12px;min-width:170px}
+select{height:52px;border:1px solid var(--line);background-color:var(--surface);border-radius:10px;padding:0 44px 0 14px;min-width:170px;cursor:pointer;
+  -webkit-appearance:none;appearance:none;
+  background-image:var(--chev);background-position:right 16px center;background-size:12px 8px;background-repeat:no-repeat}
+select:hover{border-color:var(--ink)}
 .frow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .flabel{font-size:.875rem;font-weight:600;color:var(--muted);min-width:64px}
 .chips{display:flex;gap:6px;flex-wrap:wrap}
@@ -188,6 +192,7 @@ dl.facts dd{margin:0}
 .ans.fl .cap{font-size:.875rem;font-weight:600;min-height:1.25em}
 .ans.fl kbd{align-self:flex-start}
 .typed{display:flex;gap:10px;flex-wrap:wrap}
+.typed .btn{height:56px}
 .typed input{flex:1 1 220px;height:56px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:0 16px;font-size:1.125rem}
 .typed input.ok{border-color:var(--good);background:var(--good-bg)}
 .typed input.no{border-color:var(--bad);background:var(--bad-bg)}
