@@ -264,6 +264,11 @@ dl.facts dd{margin:0}
 .missed a{display:flex;align-items:center;gap:14px;text-decoration:none;color:inherit;padding:8px 0;border-bottom:1px solid var(--line)}
 .missed .flag{height:32px;width:auto}
 .missed em{font-style:normal;color:var(--muted);font-size:.875rem;margin-left:auto;text-align:right}
+
+.datasec{margin-top:48px;padding-top:24px;border-top:1px solid var(--line)}
+.datasec h2{font-family:var(--display);font-weight:800;font-size:1.75rem;line-height:1;margin:0 0 8px}
+.datasec p{color:var(--muted);margin:0;max-width:36em;font-size:.9375rem}
+.btn.danger{background:var(--bad);color:#fff}
 footer{border-top:1px solid var(--line);color:var(--muted);font-size:.8125rem;padding:20px 0 32px}
 @media (max-width:560px){
   .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 16px}
@@ -532,7 +537,7 @@ function renderQuiz(){
   if(Q.session.done)return renderResults();
   renderQuestion();
 }
-function renderSetup(){
+function renderSetup(msg=''){
   const s=Q.setup;if(s.region&&!QREGIONS.includes(s.region))s.region='';const pool=poolFor(s);
   const lv={mastered:0,learning:0,new:0};if(s.mode!=='fam')pool.forEach(c=>lv[level(c.c)]++);const now=Date.now();const due=pool.filter(c=>{const r=store.srs[c.c];return r&&r.d<=now}).length;const P=pool.length||1;
   app.innerHTML=`<div class="qwrap">
@@ -551,6 +556,10 @@ function renderSetup(){
       <p>${s.pick==='smart'?'Smart review starts with flags that are due, then brings in new ones. A flag counts as mastered after four correct answers in a row, spaced out over days. Missed flags come back later in the same round.':'Random picks flags from the set in no particular order. Your answers still count toward your progress.'}</p>
     </section>`}
     ${pool.length?`<button class="btn" id="start">Start quiz</button>`:`<p class="lede">${s.mode==='look'?'No lookalike flags in this region. Pick another region.':'No flags match these settings. Pick another region or turn off Sovereign states only.'}</p>`}
+    <section class="datasec" aria-labelledby="dh"><h2 id="dh">Your progress</h2>
+      <p>Progress is saved in this browser only. Export it to keep a copy or move it to another browser. Importing replaces the progress here.</p>
+      <div class="qnext"><button class="btn ghost" id="exp">Export</button><button class="btn ghost" id="imp">Import</button><input type="file" id="impf" accept="application/json,.json" hidden><button class="btn ghost" id="reset">Reset progress</button></div>
+      <p class="dmsg" id="datamsg" role="status" style="color:var(--muted)">${esc(msg)}</p></section>
   </div>`;
   app.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{s.mode=b.dataset.mode;renderSetup()}));
   app.querySelectorAll('[data-qr]').forEach(b=>b.addEventListener('click',()=>{s.region=b.dataset.qr;renderSetup()}));
@@ -558,6 +567,13 @@ function renderSetup(){
   app.querySelectorAll('[data-qp]').forEach(b=>b.addEventListener('click',()=>{s.pick=b.dataset.qp;renderSetup()}));
   const qs=$('#qsov');if(qs)qs.addEventListener('change',e=>{s.sov=e.target.checked;renderSetup()});
   const st=$('#start');if(st)st.addEventListener('click',()=>startQuiz());
+  $('#exp').addEventListener('click',()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(store)],{type:'application/json'}));a.download=`flags-of-the-world-progress-${new Date().toISOString().slice(0,10)}.json`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);$('#datamsg').textContent='Progress exported.'});
+  const fi=$('#impf');$('#imp').addEventListener('click',()=>fi.click());
+  fi.addEventListener('change',async()=>{const f=fi.files[0];if(!f)return;let s=null;try{s=JSON.parse(await f.text())}catch(e){}
+    if(!s||typeof s!=='object'||typeof s.stats!=='object'){$('#datamsg').textContent='That file isn’t a Flags of the World progress export.';fi.value='';return}
+    loadStore(JSON.stringify(s));save();renderSetup('Progress imported.')});
+  const rb=$('#reset');let armed=0;rb.addEventListener('click',()=>{if(!armed){armed=setTimeout(()=>{armed=0;rb.textContent='Reset progress';rb.classList.replace('danger','ghost')},5000);rb.textContent='Tap again to erase all progress';rb.classList.replace('ghost','danger');return}
+    clearTimeout(armed);loadStore(null);save();renderSetup('Progress reset.');$('#reset').focus()});
 }
 function record(t,ok){const r=store.stats[t.c]||(store.stats[t.c]={s:0,c:0});r.s++;if(ok)r.c++;const q=store.srs[t.c]||{b:0,d:0};const now=Date.now();if(!ok){q.b=0;q.d=now}else if(q.d<=now){q.b=Math.min(5,q.b+1);q.d=now+IV[q.b]}store.srs[t.c]=q;save()}
 function renderQuestion(){
