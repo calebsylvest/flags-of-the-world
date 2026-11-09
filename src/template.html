@@ -295,6 +295,7 @@ const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'
 const C=DATA.countries.slice().sort((a,b)=>a.n.localeCompare(b.n));
 const BY={};C.forEach(c=>BY[c.c]=c);
 const REGIONS=['Africa','Americas','Asia','Europe','Oceania','Antarctic'];
+const QREGIONS=REGIONS.filter(r=>r!=='Antarctic');
 const COLORS=[['red','#D52B1E'],['orange','#F08A1C'],['yellow','#F6C800'],['green','#14884A'],['blue','#1E4FA6'],['purple','#6B3FA0'],['white','#FFFFFF'],['black','#000000']];
 const CNAME={red:'Red',orange:'Orange',yellow:'Yellow',green:'Green',blue:'Blue',purple:'Purple',white:'White',black:'Black'};
 const SORTS=[['name','Name, A to Z'],['name-desc','Name, Z to A'],['area-desc','Largest area first'],['area','Smallest area first'],['colors','Fewest colors first'],['colors-desc','Most colors first']];
@@ -302,10 +303,13 @@ const app=$('#app');
 
 // storage
 const KEY='fotw-v1';
-let store={stats:{},best:{},srs:{}};
-try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&s.stats)store=s}catch(e){}
-if(!store.srs)store.srs={};if(!store.best)store.best={};
+let store;
+function loadStore(raw){let s=null;try{s=JSON.parse(raw||'null')}catch(e){}store=s&&s.stats?s:{stats:{},best:{},srs:{}};if(!store.srs)store.srs={};if(!store.best)store.best={}}
+try{loadStore(localStorage.getItem(KEY))}catch(e){loadStore(null)}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}};
+// another tab saved: adopt its copy so our next save doesn't overwrite it
+window.addEventListener('storage',e=>{if(e.key!==KEY)return;loadStore(e.newValue);
+  if(route.v==='daily')renderDaily();else if(route.v==='learn')renderLearnHome();else if(route.v==='quiz'&&!Q.session)renderSetup()});
 
 const img=(c,cls='flag',alt)=>`<img class="${cls}" src="${SVG[c.c]}" alt="${esc(alt===undefined?'Flag of '+c.n:alt)}" width="${Math.round(60*c.ratio)}" height="60" loading="lazy" decoding="async">`;
 const colorSet=c=>new Set(c.col.map(x=>x.f));
@@ -427,13 +431,13 @@ function renderDetail(code){
       <dl class="facts">${facts.map(([k,v])=>`<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
       ${hasMap(c.c)?`<div class="sect"><h3>Where it is</h3><div class="locmap" id="locmap"></div></div>`:''}
       ${c.nb.length?`<div class="sect"><h3>Neighbors</h3><p>Countries that share a land border.</p>${miniList(c.nb)}</div>`:''}
-      <div class="sect"><a class="btn" href="#quiz" id="quizregion">Quiz me on ${esc(c.r)}</a></div>
+      <div class="sect"><a class="btn" href="#quiz" id="quizregion">${QREGIONS.includes(c.r)?`Quiz me on ${esc(c.r)}`:'Quiz me on the world'}</a></div>
     </section>
   </div>`;
   $('#back').addEventListener('click',()=>go('browse'));
   const lm=$('#locmap');if(lm){const M=mapFor([c.c]);mountMap(lm,{map:M,box:boxOf([c.c],.8,170,M),marks:{[c.c]:'sel'},ring:c.c})}
   app.querySelectorAll('[data-tag]').forEach(b=>b.addEventListener('click',()=>{Object.assign(B,{q:'',region:'',exact:false,sov:false,scroll:0});B.colors.clear();B.styles.clear();B.styles.add(b.dataset.tag);if(!STYLE_TOP.includes(b.dataset.tag))B.showStyles=true;go('browse')}));
-  $('#quizregion').addEventListener('click',e=>{e.preventDefault();Q.setup.region=c.r;Q.session=null;go('quiz')});
+  $('#quizregion').addEventListener('click',e=>{e.preventDefault();Q.setup.region=QREGIONS.includes(c.r)?c.r:'';Q.session=null;go('quiz')});
 }
 
 // map
@@ -516,11 +520,11 @@ function famItem(key){const f=DATA.fam[key];const mem=shuffle(f.m.filter(k=>BY[k
 function startQuiz(onlyCodes){
   const s=Q.setup;let pool=poolFor(s);
   if(!pool.length)return;
-  if(s.mode==='fam'){const n=s.len==='all'?20:s.len;let keys=[];while(keys.length<n)keys=keys.concat(shuffle(pool));Q.session={mode:'fam',items:keys.slice(0,n).map(famItem),i:0,score:0,done:false};renderQuiz();return}
+  if(s.mode==='fam'){const n=s.len==='all'?20:s.len;let keys=[];while(keys.length<n)keys=keys.concat(shuffle(pool));Q.session={mode:'fam',region:'',items:keys.slice(0,n).map(famItem),i:0,score:0,done:false};renderQuiz();return}
   const n=s.len==='all'?pool.length:s.len;
   let items=onlyCodes?onlyCodes.map(k=>BY[k]):(s.pick==='smart'?smartOrder(pool):shuffle(pool)).slice(0,n);
   const dpool=s.mode==='look'?C:(pool.length>=4?pool:C);
-  Q.session={mode:s.mode,region:s.region,smart:s.pick==='smart'&&!onlyCodes,dpool,box:s.mode==='map'?regionBox(s.region):null,mapset:s.mode==='map'&&s.region==='Oceania'?'p':'w',items:items.map(t=>({t,opts:optsFor(t,s.mode,dpool),ans:null,ok:null})),i:0,score:0,done:false};
+  Q.session={mode:s.mode,region:s.region,retry:!!onlyCodes,smart:s.pick==='smart'&&!onlyCodes,dpool,box:s.mode==='map'?regionBox(s.region):null,mapset:s.mode==='map'&&s.region==='Oceania'?'p':'w',items:items.map(t=>({t,opts:optsFor(t,s.mode,dpool),ans:null,ok:null})),i:0,score:0,done:false};
   renderQuiz();
 }
 function renderQuiz(){
@@ -529,14 +533,14 @@ function renderQuiz(){
   renderQuestion();
 }
 function renderSetup(){
-  const s=Q.setup;const pool=poolFor(s);
+  const s=Q.setup;if(s.region&&!QREGIONS.includes(s.region))s.region='';const pool=poolFor(s);
   const lv={mastered:0,learning:0,new:0};if(s.mode!=='fam')pool.forEach(c=>lv[level(c.c)]++);const now=Date.now();const due=pool.filter(c=>{const r=store.srs[c.c];return r&&r.d<=now}).length;const P=pool.length||1;
   app.innerHTML=`<div class="qwrap">
     <h1>Test yourself</h1>
     <p class="lede">Pick a way to play, narrow it to a region if you like, and go.</p>
     <div class="modes" role="group" aria-label="Quiz type">${MODES.map(([k,t,d,ic])=>`<button class="mode" data-mode="${k}" aria-pressed="${s.mode===k}"><span class="ic" aria-hidden="true">${ic}</span><b>${t}</b><span>${d}</span></button>`).join('')}</div>
     <div class="qopts">
-      ${s.mode==='fam'?'':`<div class="frow"><span class="flabel" id="ql-r">Region</span><div class="chips" role="group" aria-labelledby="ql-r"><button class="chip" data-qr="" aria-pressed="${!s.region}">Whole world</button>${REGIONS.filter(r=>r!=='Antarctic').map(r=>`<button class="chip" data-qr="${r}" aria-pressed="${s.region===r}">${r}</button>`).join('')}</div></div>`}
+      ${s.mode==='fam'?'':`<div class="frow"><span class="flabel" id="ql-r">Region</span><div class="chips" role="group" aria-labelledby="ql-r"><button class="chip" data-qr="" aria-pressed="${!s.region}">Whole world</button>${QREGIONS.map(r=>`<button class="chip" data-qr="${r}" aria-pressed="${s.region===r}">${r}</button>`).join('')}</div></div>`}
       <div class="frow"><span class="flabel" id="ql-l">Questions</span><div class="chips" role="group" aria-labelledby="ql-l">${(s.mode==='fam'?[10,20]:[10,20,'all']).map(v=>`<button class="chip" data-ql="${v}" aria-pressed="${String(s.len)===String(v)}">${v==='all'?`All ${pool.length}`:v}</button>`).join('')}</div></div>
       ${s.mode==='fam'?'':`<div class="frow"><span class="flabel" id="ql-p">Order</span><div class="chips" role="group" aria-labelledby="ql-p"><button class="chip" data-qp="smart" aria-pressed="${s.pick==='smart'}">Smart review</button><button class="chip" data-qp="random" aria-pressed="${s.pick==='random'}">Random</button></div></div>`}
       ${s.mode==='look'||s.mode==='fam'?'':`<div class="frow"><label class="toggle"><input type="checkbox" id="qsov"${s.sov?' checked':''}> Sovereign states only</label></div>`}
@@ -546,7 +550,7 @@ function renderSetup(){
       <dl class="pstats"><div><dt>Mastered</dt><dd>${lv.mastered}</dd></div><div><dt>Learning</dt><dd>${lv.learning}</dd></div><div><dt>New</dt><dd>${lv.new}</dd></div><div><dt>Due now</dt><dd>${due}</dd></div></dl>
       <p>${s.pick==='smart'?'Smart review starts with flags that are due, then brings in new ones. A flag counts as mastered after four correct answers in a row, spaced out over days. Missed flags come back later in the same round.':'Random picks flags from the set in no particular order. Your answers still count toward your progress.'}</p>
     </section>`}
-    ${pool.length?`<button class="btn" id="start">Start quiz</button>`:`<p class="lede">No lookalike flags in this region. Pick another region.</p>`}
+    ${pool.length?`<button class="btn" id="start">Start quiz</button>`:`<p class="lede">${s.mode==='look'?'No lookalike flags in this region. Pick another region.':'No flags match these settings. Pick another region or turn off Sovereign states only.'}</p>`}
   </div>`;
   app.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{s.mode=b.dataset.mode;renderSetup()}));
   app.querySelectorAll('[data-qr]').forEach(b=>b.addEventListener('click',()=>{s.region=b.dataset.qr;renderSetup()}));
@@ -609,7 +613,8 @@ function next(){const S=Q.session;S.view=null;if(S.i+1<S.items.length){S.i++;ren
 function renderResults(){
   const S=Q.session;const done=S.items.filter(x=>x.ans!==null);const n=done.length;const seen=new Set();const missed=done.filter(x=>!x.ok&&!seen.has(x.t.c)&&seen.add(x.t.c));
   const pct=n?Math.round(S.score/n*100):0;
-  const mk=S.mode+'|'+(Q.setup.region||'world');if(n>=10&&!S.quit){const b=store.best[mk];if(!b||pct>b){store.best[mk]=pct;save()}}
+  // retry rounds only contain flags just seen, so they don't count toward the best score
+  const mk=S.mode+'|'+(S.region||'world');if(n>=10&&!S.quit&&!S.retry){const b=store.best[mk];if(!b||pct>b){store.best[mk]=pct;save()}}
   const best=store.best[mk];
   app.innerHTML=`<div class="qwrap">
     <h1>${n?(pct===100?'Perfect round':pct>=80?'Strong round':pct>=50?'Good start':'Keep practicing'):'Quiz ended'}</h1>
@@ -742,7 +747,7 @@ function renderDaily(msg=''){
     if(st.g.includes(k)){renderDaily('You already guessed that one.');$('#din').focus();return}
     st.g.push(k);if(k===code){st.done=true;st.win=true}else if(st.g.length>=6)st.done=true;store.daily[day]=st;save();renderDaily();const di=$('#din');if(di)di.focus({preventScroll:true})})}
   const sh=$('#share');if(sh)sh.addEventListener('click',async()=>{const sq=st.g.map(k=>k===code?'🟩':(BY[k].ge&&t.ge&&geo(BY[k].ge,t.ge).d<1500?'🟨':'⬛')).join('');
-    const text=`Flags of the World, daily flag ${num}: ${st.win?st.g.length:'X'}/6\n${sq}`;
+    const text=`Flags of the World, daily flag ${num}: ${st.win?st.g.length:'X'}/6\n${sq}\n${location.origin}${location.pathname}#daily`;
     try{if(navigator.share){await navigator.share({text});return}await navigator.clipboard.writeText(text);$('#dmsg').textContent='Result copied. Paste it anywhere.'}catch(e){$('#dmsg').textContent=text}});
 }
 
