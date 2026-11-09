@@ -191,6 +191,16 @@ dl.facts dd{margin:0}
 .typed input{flex:1 1 220px;height:56px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:0 16px;font-size:1.125rem}
 .typed input.ok{border-color:var(--good);background:var(--good-bg)}
 .typed input.no{border-color:var(--bad);background:var(--bad-bg)}
+/* country suggestions (combobox) */
+.combo{position:relative;flex:1 1 220px;min-width:0}
+.combo input{width:100%;scroll-margin-top:84px}
+.combo-list{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:20;margin:0;padding:6px;list-style:none;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 36px -14px rgba(0,0,0,.35);max-height:min(324px,46vh);overflow-y:auto;overscroll-behavior:contain}
+.combo-list li{display:flex;align-items:baseline;gap:10px;min-height:46px;padding:11px 12px;border-radius:8px;cursor:pointer;font-size:1.0625rem;line-height:1.3}
+.combo-list li[aria-selected="true"]{background:var(--soft);box-shadow:inset 3px 0 0 var(--accent)}
+@media (hover:hover){.combo-list li:hover{background:var(--soft)}}
+.combo-list b{font-weight:700}
+.combo-list small{margin-left:auto;color:var(--muted);font-size:.875rem;text-align:right}
+.combo-empty{padding:11px 12px;color:var(--muted);font-size:.9375rem}
 .feedback{min-height:28px;margin:18px 0 0;font-size:1.0625rem}
 .feedback.ok{color:var(--good)}
 .feedback.no{color:var(--bad)}
@@ -627,7 +637,7 @@ function renderQuestion(){
   const S=Q.session;const it=S.items[S.i];const t=it.t;const n=S.items.length;const answered=it.ans!==null;
   let body='';
   if(S.mode==='map'){
-    body=`<p class="prompt">Where does this flag fly?</p><div class="qflag sm">${img(t,'flag','Flag to identify').replace('loading="lazy"','')}</div><div class="qmap" id="qmap"></div><p class="maphint">Tap a country. Drag to move, pinch or scroll to zoom. Small countries are marked with dots.</p>${answered?'':`<form class="typed" id="mform" autocomplete="off" style="margin-top:14px"><label class="sr" for="min">Or type the country</label><input id="min" list="mlist" placeholder="Or type the country" autocapitalize="words" spellcheck="false" enterkeyhint="done"><button class="btn ghost">Answer</button></form><datalist id="mlist">${C.filter(c=>hasMap(c.c)).map(c=>`<option value="${esc(c.n)}">`).join('')}</datalist><p class="dmsg" id="mmsg"></p>`}`;
+    body=`<p class="prompt">Where does this flag fly?</p><div class="qflag sm">${img(t,'flag','Flag to identify').replace('loading="lazy"','')}</div><div class="qmap" id="qmap"></div><p class="maphint">Tap a country. Drag to move, pinch or scroll to zoom. Small countries are marked with dots.</p>${answered?'':`<form class="typed" id="mform" autocomplete="off" style="margin-top:14px"><label class="sr" for="min">Or type the country</label><div class="combo"><input id="min" placeholder="Or type the country" autocapitalize="words" spellcheck="false" enterkeyhint="done"></div><button class="btn ghost">Answer</button></form><p class="dmsg" id="mmsg"></p>`}`;
   }else if(S.mode==='find'||S.mode==='fam'){
     const F=S.mode==='fam'?DATA.fam[it.fam]:null;
     body=`<p class="prompt">${F?`Which flag isn’t part of ${esc(F.n)}?`:esc(t.n)}</p><div class="answers flags">${it.opts.map((o,i)=>{
@@ -661,7 +671,7 @@ function renderQuestion(){
   const qm=$('#qmap');if(qm){const start=S.view||S.box;const marks=answered?(it.ok?{[t.c]:'ok'}:{[t.c]:'ok',[it.ans]:'no'}):{};
     const QM=S.mapset==='p'&&(PAC.shapes[t.c]||PAC.pts[t.c])?PAC:MAP;const m=mountMap(qm,{map:QM,box:QM===PAC||S.mapset!=='p'?start:{x:0,y:0,w:MAP.W,h:MAP.H},marks,ring:answered?t.c:null,interactive:true,onView:v=>{S.view=v},onPick:k=>{if(it.ans===null)answer(k)}});
     if(answered)m.flyTo(boxOf(it.ok?[t.c]:[t.c,it.ans],.6,140,QM));else if(S.view){m.flyTo(S.box)}}
-  const mf=$('#mform');if(mf)mf.addEventListener('submit',e=>{e.preventDefault();const k=whichCountry($('#min').value);if(!k){$('#mmsg').textContent='Pick a country from the list.';announce('Pick a country from the list.');$('#min').focus();return}answer(k)});
+  const mf=$('#mform');if(mf){combo($('#min'),C.filter(c=>hasMap(c.c)));mf.addEventListener('submit',e=>{e.preventDefault();const k=whichCountry($('#min').value);if(!k){$('#mmsg').textContent=NOMATCH;announce(NOMATCH);$('#min').focus();return}answer(k)})}
   const f=$('#tform');if(f){f.addEventListener('submit',e=>{e.preventDefault();const v=$('#tin').value.trim();if(!v){$('#tin').focus();return}answer(v)});$('#skip').addEventListener('click',()=>answer(''));if(!answered)$('#tin').focus({preventScroll:true})}
   const nx=$('#next');if(nx){nx.addEventListener('click',next);nx.focus({preventScroll:true})}
   $('#quit').addEventListener('click',()=>{Q.session.done=true;Q.session.quit=true;renderResults()});
@@ -802,13 +812,15 @@ function renderDaily(msg=''){
     ${st.done?`<p class="feedback ${st.win?'ok':'no'}" style="font-size:1.25rem">${st.win?`Got it in ${st.g.length}. It’s ${esc(t.n)}.`:`Out of guesses. It’s ${esc(t.n)}.`} <a href="#flag-${t.c}">About this flag</a></p>
       <div class="qnext"><button class="btn" id="share">Share result</button><a class="btn ghost" href="#quiz">Practice in the quiz</a></div><p class="dmsg" id="dmsg" style="color:var(--muted)"></p>
       <dl class="dstats"><div><dt>Played</dt><dd>${S.played}</dd></div><div><dt>Won</dt><dd>${S.pct}%</dd></div><div><dt>Streak</dt><dd>${S.cur}</dd></div><div><dt>Best streak</dt><dd>${S.best}</dd></div></dl>`
-    :`<form class="typed" id="dform" autocomplete="off" style="margin-top:18px"><label class="sr" for="din">Your guess</label><input id="din" list="dlist" placeholder="Guess a country" autocapitalize="words" spellcheck="false" enterkeyhint="go"><button class="btn">Guess</button></form>
-      <datalist id="dlist">${C.filter(c=>c.ind).map(c=>`<option value="${esc(c.n)}">`).join('')}</datalist><p class="dmsg">${esc(msg)}</p>`}
+    :`<form class="typed" id="dform" autocomplete="off" style="margin-top:18px"><label class="sr" for="din">Your guess</label><div class="combo"><input id="din" placeholder="Guess a country" autocapitalize="words" spellcheck="false" enterkeyhint="go"></div><button class="btn">Guess</button></form>
+      <p class="dmsg" id="dguess">${esc(msg)}</p>`}
     <div class="guesses">${rows}</div>
   </div>`;
-  const f=$('#dform');if(f){f.addEventListener('submit',e=>{e.preventDefault();const k=whichCountry($('#din').value);
-    if(!k){renderDaily('Pick a country from the list.');announce('Pick a country from the list.');$('#din').focus();return}
-    if(st.g.includes(k)){renderDaily('You already guessed that one.');announce('You already guessed that one.');$('#din').focus();return}
+  const f=$('#dform');if(f){combo($('#din'),C.filter(c=>c.ind));f.addEventListener('submit',e=>{e.preventDefault();const k=whichCountry($('#din').value);
+    // keep what was typed on an error so it can be corrected
+    const oops=m=>{$('#dguess').textContent=m;announce(m);$('#din').focus()};
+    if(!k){oops(NOMATCH);return}
+    if(st.g.includes(k)){oops('You already guessed that one.');return}
     st.g.push(k);if(k===code){st.done=true;st.win=true}else if(st.g.length>=6)st.done=true;store.daily[day]=st;save();renderDaily();
     const g=k!==code&&BY[k].ge&&t.ge?geo(BY[k].ge,t.ge):null;announce(st.done?textOf('.feedback'):`${BY[k].n} is wrong${g?`, ${Math.round(g.d).toLocaleString('en-US')} km away`:''}. ${6-st.g.length} guesses left.`);
     const di=$('#din');if(di)di.focus({preventScroll:true})})}
@@ -818,6 +830,46 @@ function renderDaily(msg=''){
 }
 
 // matching
+const NOMATCH='No country matches that name. Pick one from the suggestions.';
+// Country suggestions for a text field (ARIA combobox). No flags in the list: they would give answers away.
+// Ranking: name starts with the text, then a later word in the name does, then an alternate name does, then contains.
+let comboN=0;
+function combo(input,list){
+  const id='cb'+(++comboN);const ul=document.createElement('ul');ul.id=id+'-list';ul.className='combo-list';ul.setAttribute('role','listbox');ul.hidden=true;
+  const lab=input.labels&&input.labels[0];if(lab){lab.id=lab.id||id+'-label';ul.setAttribute('aria-labelledby',lab.id)}
+  input.after(ul);
+  Object.entries({role:'combobox','aria-autocomplete':'list','aria-expanded':'false','aria-controls':ul.id,autocomplete:'off'}).forEach(([k,v])=>input.setAttribute(k,v));
+  const idx=list.map(c=>({c,n:norm(c.n),alts:[...new Set([c.o,...c.alts].map(norm))].filter(Boolean)}));
+  let items=[],active=-1;
+  const mark=(name,q)=>{const i=norm(name)===name.toLowerCase()?name.toLowerCase().indexOf(q):-1;return i<0?esc(name):esc(name.slice(0,i))+'<b>'+esc(name.slice(i,i+q.length))+'</b>'+esc(name.slice(i+q.length))};
+  function search(raw){const q=norm(raw);if(!q)return[];const out=[];
+    for(const x of idx){let r=-1,alt='';
+      if(x.n.startsWith(q))r=0;else if(x.n.split(' ').some(w=>w.startsWith(q)))r=1;
+      else{const long=q.length>=3;const a=x.alts.find(a=>a===q||(long&&a.startsWith(q)));if(a){r=2;alt=a}else if(x.n.includes(q))r=3;else if(long){const b=x.alts.find(a=>a.length>3&&a.includes(q));if(b){r=4;alt=b}}}
+      if(r>=0)out.push({c:x.c,r,alt})}
+    return out.sort((a,b)=>a.r-b.r||a.c.n.localeCompare(b.c.n)).slice(0,8)}
+  const altLabel=(c,a)=>{const m=[c.o,...c.alts].find(x=>norm(x)===a&&x!==x.toLowerCase())||(a.length<=4?a.toUpperCase():a);return m.length>28?m.slice(0,27)+'…':m};
+  function open(){const q=norm(input.value);items=search(input.value);active=-1;
+    if(!q){close();return}
+    ul.innerHTML=items.length?items.map((x,i)=>`<li role="option" id="${id}-${i}" data-i="${i}" aria-selected="false"><span>${x.r<=1||x.r===3?mark(x.c.n,q):esc(x.c.n)}</span>${x.alt?`<small>${esc(altLabel(x.c,x.alt))}</small>`:''}</li>`).join(''):`<li class="combo-empty" role="presentation">No matches</li>`;
+    ul.hidden=false;input.setAttribute('aria-expanded','true');input.removeAttribute('aria-activedescendant')}
+  function close(){ul.hidden=true;input.setAttribute('aria-expanded','false');input.removeAttribute('aria-activedescendant');active=-1}
+  function setActive(i){active=i;ul.querySelectorAll('[role=option]').forEach((li,j)=>li.setAttribute('aria-selected',j===i));
+    const li=ul.querySelector(`[data-i="${i}"]`);if(li){input.setAttribute('aria-activedescendant',li.id);li.scrollIntoView({block:'nearest'})}}
+  function pick(i){const x=items[i];if(!x)return;input.value=x.c.n;close();input.focus()}
+  input.addEventListener('input',open);
+  input.addEventListener('focus',()=>{if(matchMedia('(max-width:700px)').matches)setTimeout(()=>input.scrollIntoView({block:'start',behavior:reduced?'auto':'smooth'}),250)});
+  input.addEventListener('keydown',e=>{const n=items.length;
+    if(e.key==='ArrowDown'){e.preventDefault();if(ul.hidden)open();else if(n)setActive((active+1)%n)}
+    else if(e.key==='ArrowUp'){e.preventDefault();if(!ul.hidden&&n)setActive(active<=0?n-1:active-1)}
+    else if(e.key==='Enter'&&!ul.hidden&&active>=0){e.preventDefault();pick(active)}
+    else if(e.key==='Escape'&&!ul.hidden){e.preventDefault();close()}
+    else if(e.key==='Tab')close()});
+  // keep focus in the field while tapping a suggestion
+  ul.addEventListener('pointerdown',e=>e.preventDefault());
+  ul.addEventListener('click',e=>{const li=e.target.closest('[data-i]');if(li)pick(+li.dataset.i)});
+  input.addEventListener('blur',()=>setTimeout(()=>{if(document.activeElement!==input)close()},0));
+}
 function norm(s){return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/&/g,' and ').replace(/\bsaint\b/g,'st').replace(/[^a-z0-9]+/g,' ').replace(/\bthe\b/g,' ').replace(/\s+/g,' ').trim()}
 function lev(a,b){if(a===b)return 0;const m=a.length,n=b.length;if(Math.abs(m-n)>2)return 9;let p=Array.from({length:n+1},(_,i)=>i);for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n]}
 const NAMES=C.map(c=>({c:c.c,set:[...new Set([c.n,c.o,...c.alts].map(norm))]}));

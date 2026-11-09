@@ -162,3 +162,49 @@ test('map quiz works with a group selection',async({page})=>{
   await page.click('#start');
   await expect(page.locator('#qmap svg')).toBeVisible();
 });
+
+test('country suggestions: ranking, keyboard, tap, alternate names',async({page})=>{
+  await page.goto('/#daily');
+  const input=page.locator('#din'),list=page.locator('.combo-list');
+  await expect(input).toHaveAttribute('role','combobox');
+  await expect(list).toBeHidden();
+  await input.pressSequentially('na');
+  await expect(list).toBeVisible();
+  await expect(input).toHaveAttribute('aria-expanded','true');
+  const first=await list.locator('[role=option]').first().textContent();
+  expect(first.startsWith('Na'),`first suggestion for "na" was ${first}`).toBe(true); // names starting with the text come first
+  await input.press('ArrowDown');
+  await expect(list.locator('[aria-selected=true]')).toHaveCount(1);
+  await input.press('Enter'); // picks, does not submit
+  await expect(input).toHaveValue(first);
+  await expect(list).toBeHidden();
+  await expect(page.locator('.guess')).toHaveCount(0);
+  // alternate names find the country and show the matched name
+  await input.fill('');
+  await input.pressSequentially('usa');
+  const us=list.locator('[role=option]').filter({hasText:'United States'}).first();
+  await expect(us).toBeVisible();
+  await us.click();
+  await expect(input).toHaveValue('United States');
+  await expect(input).toBeFocused();
+  // Escape closes
+  await input.fill('');await input.pressSequentially('ger');
+  await expect(list).toBeVisible();
+  await input.press('Escape');
+  await expect(list).toBeHidden();
+  // an unknown name keeps the text and explains
+  await input.fill('Narnia');await input.press('Escape');await input.press('Enter');
+  await expect(page.locator('#dguess')).toContainText('No country matches');
+  await expect(input).toHaveValue('Narnia');
+});
+
+test('map quiz suggestions pick a country to answer',async({page})=>{
+  await page.goto('/#quiz');
+  await page.click('[data-mode="map"]');
+  await page.click('#start');
+  await page.locator('#min').pressSequentially('jap');
+  await page.locator('.combo-list [role=option]').first().click();
+  await expect(page.locator('#min')).toHaveValue('Japan');
+  await page.press('#min','Enter');
+  await expect(page.locator('.feedback')).toBeVisible();
+});
