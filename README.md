@@ -39,6 +39,10 @@ npm run build
 
 Any static host works. For GitHub Pages: repository Settings, Pages, deploy from the `main` branch, root folder.
 
+## License
+
+Code: [MIT](LICENSE). Country data: the data built into `index.html` is derived from world-countries and offered under the [Open Database License](https://opendatacommons.org/licenses/odbl/1-0/). Flag artwork and map shapes: public domain. See [LICENSE](LICENSE) for details.
+
 ## Credits
 
 - Flag artwork: [hampusborgos/country-flags](https://github.com/hampusborgos/country-flags), public domain
