@@ -2,19 +2,21 @@
 
 Browse every flag, learn them in small regional units, and test yourself with quizzes, a map game and a daily flag.
 
-The whole site is one static file, `index.html`. No server, database or API keys. Progress (quiz history, spaced repetition, learned units, daily streaks) is saved in each visitor's browser with `localStorage`.
+The site is static: `index.html` plus `map.json`, which holds the map shapes and loads the first time a map is shown. No server, database or API keys. Progress (quiz history, spaced repetition, learned units, daily streaks) is saved in each visitor's browser with `localStorage`.
 
 ## Run it locally
 
-Open `index.html` in a browser, or serve the folder:
+Serve the folder, then open http://localhost:3000:
 
 ```sh
 npm run serve
 ```
 
+Opening `index.html` straight from disk also works, except for the maps: browsers block loading `map.json` from a `file://` page.
+
 ## Edit and rebuild
 
-`index.html` is generated. Edit the sources, then rebuild:
+`index.html` and `map.json` are generated. Edit the sources, then rebuild:
 
 ```sh
 npm install
@@ -30,7 +32,7 @@ npm run build
 | `data/pron.js` | Pronunciation respellings, notes and speech hints |
 | `data/daily.js` | Daily flag schedule. Append new codes only; never reorder |
 | `vendor/country-flags/svg` | Flag artwork |
-| `scripts/` | Build steps: optimize flags and measure colors, project the maps, merge data, write `index.html` |
+| `scripts/` | Build steps: optimize flags and measure colors, project the maps, merge data, write `index.html` and `map.json` |
 
 ## Deploy
 

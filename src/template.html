@@ -293,7 +293,7 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:.8125rem;pa
 <script>
 const DATA=__DATA__;
 const SVG=__SVG__;
-const MAP=__MAP__;
+const MAPMETA=__MAPMETA__;
 </script>
 <script>
 (()=>{
@@ -445,13 +445,17 @@ function renderDetail(code){
     </section>
   </div>`;
   $('#back').addEventListener('click',()=>go('browse'));
-  const lm=$('#locmap');if(lm){const M=mapFor([c.c]);mountMap(lm,{map:M,box:boxOf([c.c],.8,170,M),marks:{[c.c]:'sel'},ring:c.c})}
+  const lm=$('#locmap');if(lm)whenMap(lm,()=>{const M=mapFor([c.c]);mountMap(lm,{map:M,box:boxOf([c.c],.8,170,M),marks:{[c.c]:'sel'},ring:c.c})});
   app.querySelectorAll('[data-tag]').forEach(b=>b.addEventListener('click',()=>{Object.assign(B,{q:'',region:'',exact:false,sov:false,scroll:0});B.colors.clear();B.styles.clear();B.styles.add(b.dataset.tag);if(!STYLE_TOP.includes(b.dataset.tag))B.showStyles=true;go('browse')}));
   $('#quizregion').addEventListener('click',e=>{e.preventDefault();Q.setup.region=QREGIONS.includes(c.r)?c.r:'';Q.session=null;go('quiz')});
 }
 
 // map
-const MR=MAP.W/MAP.H;const PAC=Object.assign(MAP.pac,{key:'p'});MAP.key='w';const NODES={};
+// Map shapes live in map.json and load on first use; MAPMETA (inlined) says which countries have a shape.
+const MR=MAPMETA.W/MAPMETA.H;let MAP=null,PAC=null;const NODES={};let mapP=null;
+function loadMap(){return mapP||(mapP=fetch(MAPMETA.url).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()}).then(m=>{MAP=m;MAP.key='w';PAC=Object.assign(m.pac,{key:'p'})}).catch(e=>{mapP=null;throw e}))}
+function whenMap(el,fn){el.setAttribute('aria-busy','true');loadMap().then(()=>{el.removeAttribute('aria-busy');if(el.isConnected)fn()},()=>{el.removeAttribute('aria-busy');if(el.isConnected)el.innerHTML='<p class="maphint" style="padding:12px">The map couldn’t load.</p>'})}
+const HASMAP=new Set(MAPMETA.has);
 const isPac=k=>BY[k]&&BY[k].r==='Oceania';
 const mapFor=codes=>codes.length&&codes.every(k=>isPac(k)&&(PAC.shapes[k]||PAC.pts[k]))?PAC:MAP;
 function mapNode(M){if(!NODES[M.key]){let h=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${M.W} ${M.H}" preserveAspectRatio="xMidYMid meet" class="mapsvg" role="img" aria-label="World map"><path class="sea" d="${M.sph}"/><g class="lands">`;
@@ -460,7 +464,7 @@ function mapNode(M){if(!NODES[M.key]){let h=`<svg xmlns="http://www.w3.org/2000/
   for(const[k,p]of Object.entries(M.pts))h+=`<circle data-c="${k}" cx="${p[0]}" cy="${p[1]}" r="2"/>`;
   NODES[M.key]=new DOMParser().parseFromString(h+'</g><circle class="ring" r="0" cx="0" cy="0"/></svg>','image/svg+xml').documentElement}
   return document.importNode(NODES[M.key],true)}
-const hasMap=k=>!!(MAP.shapes[k]||MAP.pts[k]);
+const hasMap=k=>HASMAP.has(k);
 const cpos=(k,M=MAP)=>M.shapes[k]?M.shapes[k].c:M.pts[k];
 const bnd=(k,M=MAP)=>{const v=M.shapes[k];return v?v.b:(M.pts[k]?[...M.pts[k],...M.pts[k]]:null)};
 function clampBox(b,M=MAP){b.w=Math.max(30,Math.min(b.w,M.W));b.h=b.w/MR;b.x=Math.max(-b.w*.25,Math.min(M.W-b.w*.75,b.x));b.y=Math.max(-b.h*.25,Math.min(M.H-b.h*.75,b.y));return b}
@@ -530,6 +534,8 @@ function famItem(key){const f=DATA.fam[key];const mem=shuffle(f.m.filter(k=>BY[k
 function startQuiz(onlyCodes){
   const s=Q.setup;let pool=poolFor(s);
   if(!pool.length)return;
+  if(s.mode==='map'&&!MAP){const b=$('#start')||$('#retry');if(b){b.disabled=true;b.textContent='Loading the map…'}
+    loadMap().then(()=>startQuiz(onlyCodes),()=>{if(b&&b.isConnected){b.disabled=false;b.textContent='The map didn’t load. Try again'}announce('The map didn’t load. Try again.')});return}
   if(s.mode==='fam'){const n=s.len==='all'?20:s.len;let keys=[];while(keys.length<n)keys=keys.concat(shuffle(pool));Q.session={mode:'fam',region:'',items:keys.slice(0,n).map(famItem),i:0,score:0,done:false};renderQuiz();return}
   const n=s.len==='all'?pool.length:s.len;
   let items=onlyCodes?onlyCodes.map(k=>BY[k]):(s.pick==='smart'?smartOrder(pool):shuffle(pool)).slice(0,n);
@@ -566,6 +572,7 @@ function renderSetup(msg=''){
       <div class="qnext"><button class="btn ghost" id="exp">Export</button><button class="btn ghost" id="imp">Import</button><input type="file" id="impf" accept="application/json,.json" hidden><button class="btn ghost" id="reset">Reset progress</button></div>
       <p class="dmsg" id="datamsg" role="status" style="color:var(--muted)">${esc(msg)}</p></section>
   </div>`;
+  if(s.mode==='map')loadMap().catch(()=>{});
   app.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{s.mode=b.dataset.mode;renderSetup()}));
   app.querySelectorAll('[data-qr]').forEach(b=>b.addEventListener('click',()=>{s.region=b.dataset.qr;renderSetup()}));
   app.querySelectorAll('[data-ql]').forEach(b=>b.addEventListener('click',()=>{s.len=b.dataset.ql==='all'?'all':+b.dataset.ql;renderSetup()}));
@@ -700,7 +707,7 @@ function renderUnit(id){
     <div class="tabs" role="group" aria-label="Steps">${steps.map(([k,l])=>`<button data-step="${k}" aria-pressed="${L.step===k}">${l}</button>`).join('')}</div>
     ${body}</div>`;
   app.querySelectorAll('[data-step]').forEach(b=>b.addEventListener('click',()=>{L.step=b.dataset.step;if(L.step==='practice'&&L.pr&&L.pr.done)L.pr=null;renderUnit(id)}));
-  if(L.step==='meet'){const mm=$('#meetmap');if(mm){const k=u.m[L.i];const marks={};u.m.forEach(x=>marks[x]='grp');marks[k]='sel';const M=mapFor(u.m);mountMap(mm,{map:M,box:boxOf(u.m,.18,70,M),marks,ring:k})}
+  if(L.step==='meet'){const mm=$('#meetmap');if(mm)whenMap(mm,()=>{const k=u.m[L.i];const marks={};u.m.forEach(x=>marks[x]='grp');marks[k]='sel';const M=mapFor(u.m);mountMap(mm,{map:M,box:boxOf(u.m,.18,70,M),marks,ring:k})});
     $('#prev').onclick=()=>{L.i--;renderUnit(id)};$('#nxt').onclick=()=>{if(L.i<u.m.length-1)L.i++;else L.step=u.cmp.length?'compare':'practice';renderUnit(id)};app.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{L.i=+b.dataset.i;renderUnit(id)})}
   const tp=$('#topr');if(tp)tp.onclick=()=>{L.step='practice';L.pr=null;renderUnit(id)};
   if(L.step==='practice')bindPractice(u);
