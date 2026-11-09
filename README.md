@@ -1,0 +1,42 @@
+# Flags of the World
+
+Browse every flag, learn them in small regional units, and test yourself with quizzes, a map game and a daily flag.
+
+The whole site is one static file, `index.html`. No server, database or API keys. Progress (quiz history, spaced repetition, learned units, daily streaks) is saved in each visitor's browser with `localStorage`.
+
+## Run it locally
+
+Open `index.html` in a browser, or serve the folder:
+
+```sh
+npm run serve
+```
+
+## Edit and rebuild
+
+`index.html` is generated. Edit the sources, then rebuild:
+
+```sh
+npm install
+npm run build
+```
+
+| Path | What it holds |
+| --- | --- |
+| `src/template.html` | Page markup, styles and app code |
+| `data/curated.js` | Style tags, flag families, lookalike groups, alternate names, flag stories |
+| `data/curated2.js` | More flag stories and lookalike tips |
+| `data/units.js` | Learn units, spotting notes and comparisons |
+| `data/pron.js` | Pronunciation respellings, notes and speech hints |
+| `vendor/country-flags/svg` | Flag artwork |
+| `scripts/` | Build steps: optimize flags and measure colors, project the maps, merge data, write `index.html` |
+
+## Deploy
+
+Any static host works. For GitHub Pages: repository Settings, Pages, deploy from the `main` branch, root folder.
+
+## Credits
+
+- Flag artwork: [hampusborgos/country-flags](https://github.com/hampusborgos/country-flags), public domain
+- Country data: [mledoze/countries](https://github.com/mledoze/countries) (world-countries), Open Database License
+- Map shapes: [world-atlas](https://github.com/topojson/world-atlas) from Natural Earth, public domain

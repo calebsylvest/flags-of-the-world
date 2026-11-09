@@ -1,0 +1,18 @@
+{
+  "name": "flags-of-the-world",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Browse, learn and quiz yourself on every flag in the world. Builds to a single static index.html.",
+  "scripts": {
+    "build": "node scripts/process.js && node scripts/map.mjs && node scripts/build.js && node scripts/assemble.js",
+    "serve": "npx --yes serve ."
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "2.6.2",
+    "d3-geo": "3.1.2",
+    "svgo": "4.1.0",
+    "topojson-client": "3.1.0",
+    "world-atlas": "2.0.2",
+    "world-countries": "5.1.0"
+  }
+}

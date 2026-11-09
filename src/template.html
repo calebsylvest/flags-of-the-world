@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Flags of the World</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F4F5F7;--surface:#FFFFFF;--ink:#171B24;--muted:#5A6373;--line:#D9DDE4;--soft:#E9ECF0;
+  --accent:#1F3F8F;--accent-ink:#FFFFFF;--good:#1C7A48;--good-bg:#E3F3EA;--bad:#B8322A;--bad-bg:#FBE6E3;
+  --flag-edge:rgba(23,27,36,.14);--sea:#DCE3EC;--land:#FFFFFF;--border:#BCC4D0;--grp:#BFCBEA;
+  --display:"Big Shoulders Display","Arial Narrow","Helvetica Neue",Arial,sans-serif;
+  --body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12151B;--surface:#1B1F28;--ink:#ECEEF2;--muted:#9AA3B2;--line:#2E3440;--soft:#242A35;
+  --accent:#9DB2FF;--accent-ink:#0E1630;--good:#5FD39A;--good-bg:#173226;--bad:#FF8A7E;--bad-bg:#3A1C1A;
+  --flag-edge:rgba(255,255,255,.16);--sea:#161B24;--land:#323A47;--border:#12151B;--grp:#45537A;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12151B;--surface:#1B1F28;--ink:#ECEEF2;--muted:#9AA3B2;--line:#2E3440;--soft:#242A35;
+  --accent:#9DB2FF;--accent-ink:#0E1630;--good:#5FD39A;--good-bg:#173226;--bad:#FF8A7E;--bad-bg:#3A1C1A;
+  --flag-edge:rgba(255,255,255,.16);--sea:#161B24;--land:#323A47;--border:#12151B;--grp:#45537A;color-scheme:dark}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 72px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+img{max-width:100%}
+button,input,select{font:inherit;color:inherit}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1200px;margin:0 auto;padding:0 20px}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;height:60px;gap:16px}
+.mark{font-family:var(--display);font-weight:800;font-size:1.5rem;letter-spacing:.01em;text-decoration:none;color:var(--ink);display:flex;align-items:center;gap:30px;white-space:nowrap;min-width:0}
+.mk-short{display:none}
+.mark i{display:block;width:6px;height:28px;background:var(--ink);border-radius:1px;position:relative}
+.mark i::after{content:"";position:absolute;left:6px;top:0;width:18px;height:12px;background:var(--accent);clip-path:polygon(0 0,100% 0,78% 50%,100% 100%,0 100%)}
+nav{display:flex;gap:4px}
+nav a{text-decoration:none;color:var(--muted);font-weight:600;padding:8px 14px;border-radius:999px}
+nav a[aria-current="page"]{background:var(--ink);color:var(--bg)}
+
+/* hero */
+.hero{padding:40px 0 8px}
+.hero h1{font-family:var(--display);font-weight:800;font-size:clamp(3.2rem,11vw,7.5rem);line-height:.86;margin:0;letter-spacing:-.005em}
+.hero p{max-width:34em;color:var(--muted);font-size:1.0625rem;margin:16px 0 0}
+.palette{margin:28px 0 6px}
+.palette-bar{display:flex;height:22px;border-radius:3px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--flag-edge)}
+.palette-bar span{display:block;height:100%}
+.palette-key{display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:8px;font-size:.875rem;color:var(--muted)}
+.palette-key b{color:var(--ink);font-weight:600}
+
+/* controls */
+.controls{padding:24px 0 8px;display:grid;gap:14px}
+.fpanel{display:grid;gap:14px}
+.ftoggle{display:none;height:52px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:0 16px;font-weight:600;cursor:pointer;align-items:center;gap:8px}
+.ftoggle[aria-expanded="true"]{border-color:var(--ink)}
+.frow .chips{flex:1 1 0;min-width:0}
+@media (max-width:700px){.fpanel{display:none}.fpanel.open{display:grid}.ftoggle{display:inline-flex}.searchrow select{min-width:0;flex:1}.searchrow > label:not(.search){flex:1;display:flex}}
+.searchrow{display:flex;gap:10px;flex-wrap:wrap}
+.search{flex:1 1 260px;position:relative}
+.search input{width:100%;height:52px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:0 16px 0 44px;font-size:1.0625rem}
+.search svg{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--muted)}
+select{height:52px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:0 12px;min-width:170px}
+.frow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.flabel{font-size:.875rem;font-weight:600;color:var(--muted);min-width:64px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:.875rem;cursor:pointer;line-height:1.2}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.sw{width:30px;height:30px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0;position:relative}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--ink)}
+.sw[aria-pressed="true"]::after{content:"";position:absolute;inset:8px;border-radius:50%;background:var(--ink);opacity:.0}
+.sw[aria-pressed="true"]::before{content:"";position:absolute;left:50%;top:50%;width:10px;height:6px;border:solid #fff;border-width:0 0 2.5px 2.5px;transform:translate(-50%,-70%) rotate(-45deg);filter:drop-shadow(0 0 1.5px rgba(0,0,0,.7))}
+.toggle{display:inline-flex;align-items:center;gap:8px;font-size:.875rem;cursor:pointer}
+.toggle input{width:18px;height:18px;accent-color:var(--accent)}
+.more{border:none;background:none;color:var(--accent);font-weight:600;cursor:pointer;padding:6px 0;font-size:.875rem}
+.status{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0 4px;border-top:1px solid var(--line);margin-top:6px;font-size:.9375rem;color:var(--muted)}
+.status b{color:var(--ink)}
+.linkbtn{border:none;background:none;color:var(--accent);font-weight:600;cursor:pointer;padding:4px 0}
+
+/* grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:28px 20px;padding:16px 0 64px}
+.tile{display:flex;flex-direction:column;gap:10px;text-decoration:none;color:inherit;border-radius:6px}
+.fbox{height:96px;display:flex;align-items:flex-end;justify-content:flex-start}
+.flag{display:block;border-radius:2px;box-shadow:0 0 0 1px var(--flag-edge);background:var(--soft)}
+.fbox .flag{max-height:96px;max-width:100%;height:auto;width:auto}
+.tile .nm{font-weight:600;line-height:1.25}
+.tile .rg{font-size:.8125rem;color:var(--muted);margin-top:-8px}
+.tile:hover .flag{box-shadow:0 0 0 1px var(--flag-edge),0 6px 18px -8px rgba(0,0,0,.35)}
+.empty{padding:48px 0 80px;max-width:30em}
+.empty h2{font-family:var(--display);font-size:2rem;margin:0 0 6px}
+
+/* detail */
+.back{display:inline-flex;gap:6px;align-items:center;margin:24px 0 8px;font-weight:600;text-decoration:none;border:none;background:none;color:var(--accent);cursor:pointer;padding:4px 0}
+.dhead h1{font-family:var(--display);font-weight:800;font-size:clamp(2.6rem,8vw,5rem);line-height:.9;margin:8px 0 6px}
+.dhead .off{color:var(--muted);margin:0}
+.dflag{margin:28px 0 0;padding:clamp(20px,5vw,48px);background:var(--surface);border:1px solid var(--line);border-radius:12px;display:flex;justify-content:center}
+.dflag .flag{width:auto;max-width:100%;max-height:min(52vh,420px);height:auto}
+.strip{display:flex;height:14px;margin-top:14px;border-radius:2px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--flag-edge)}
+.strip span{height:100%}
+.colors{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px;font-size:.875rem}
+.colors span{display:inline-flex;align-items:center;gap:6px}
+.colors i{width:12px;height:12px;border-radius:50%;box-shadow:0 0 0 1px var(--flag-edge)}
+.colors em{font-style:normal;color:var(--muted)}
+.cols{display:grid;grid-template-columns:1fr;gap:40px;margin:40px 0 72px}
+@media (min-width:860px){.cols{grid-template-columns:1.15fr 1fr}}
+.cols h2{font-family:var(--display);font-weight:800;font-size:1.75rem;line-height:1;margin:0 0 14px}
+.story{font-size:1.125rem;line-height:1.6;max-width:36em;margin:0 0 6px}
+.story-meta{color:var(--muted);font-size:.9375rem;margin:0}
+dl.facts{display:grid;grid-template-columns:max-content 1fr;gap:10px 20px;margin:0}
+dl.facts dt{color:var(--muted);font-size:.9375rem}
+dl.facts dd{margin:0}
+.sect{margin-top:36px}
+.sect h3{font-size:1.0625rem;margin:0 0 4px}
+.sect p{color:var(--muted);margin:0 0 12px;max-width:36em;font-size:.9375rem}
+.mini{display:flex;flex-wrap:wrap;gap:14px}
+.mini a{display:flex;flex-direction:column;gap:6px;width:88px;text-decoration:none;color:inherit;font-size:.8125rem;line-height:1.25}
+.mini .mbox{height:48px;display:flex;align-items:flex-end}
+.mini .flag{max-height:48px;max-width:88px;width:auto;height:auto}
+.tagrow{display:flex;flex-wrap:wrap;gap:6px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;background:var(--accent);color:var(--accent-ink);font-weight:600;border-radius:10px;padding:0 20px;height:48px;cursor:pointer;text-decoration:none;font-size:1rem}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+
+/* quiz */
+.qwrap{max-width:760px;margin:0 auto;padding:32px 0 80px}
+.qwrap h1{font-family:var(--display);font-weight:800;font-size:clamp(2.8rem,9vw,5.25rem);line-height:.88;margin:0 0 12px}
+.qwrap > p.lede{color:var(--muted);margin:0 0 28px;max-width:32em}
+.modes{display:grid;gap:10px}
+.mode{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;align-items:center;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:16px;cursor:pointer}
+.mode[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.mode .ic{grid-row:span 2;width:44px;height:44px;border-radius:10px;background:var(--soft);display:grid;place-items:center}
+.mode b{font-size:1.0625rem}
+.mode span{color:var(--muted);font-size:.9375rem}
+.qopts{display:grid;gap:18px;margin:28px 0}
+.qopts .frow{gap:10px}
+.qopts .flabel{min-width:80px}
+.qprog{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:.9375rem;margin-bottom:10px}
+.qprog b{color:var(--ink)}
+.bar{height:4px;background:var(--soft);border-radius:2px;overflow:hidden;margin-bottom:28px}
+.bar span{display:block;height:100%;background:var(--ink);transition:width .25s ease}
+.prompt{font-family:var(--display);font-weight:800;font-size:clamp(2.2rem,8vw,4rem);line-height:.95;margin:0 0 24px}
+.qflag{display:flex;justify-content:center;padding:clamp(16px,5vw,40px);background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:20px}
+.qflag .flag{max-height:min(34vh,260px);max-width:100%;width:auto;height:auto}
+.answers{display:grid;gap:10px}
+@media (min-width:600px){.answers.names{grid-template-columns:1fr 1fr}}
+.ans{display:flex;align-items:center;gap:12px;text-align:left;min-height:56px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:600;font-size:1.0625rem}
+.ans kbd{font-family:var(--body);font-size:.75rem;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-weight:500}
+.ans:hover:not(:disabled){border-color:var(--ink)}
+.ans:disabled{cursor:default}
+.ans.ok{background:var(--good-bg);border-color:var(--good);color:var(--ink)}
+.ans.no{background:var(--bad-bg);border-color:var(--bad)}
+.answers.flags{grid-template-columns:1fr 1fr}
+.ans.fl{flex-direction:column;align-items:center;justify-content:center;padding:14px;gap:8px;min-height:120px}
+.ans.fl .flag{max-height:84px;max-width:100%;width:auto;height:auto}
+.ans.fl .cap{font-size:.875rem;font-weight:600;min-height:1.25em}
+.ans.fl kbd{align-self:flex-start}
+.typed{display:flex;gap:10px;flex-wrap:wrap}
+.typed input{flex:1 1 220px;height:56px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:0 16px;font-size:1.125rem}
+.typed input.ok{border-color:var(--good);background:var(--good-bg)}
+.typed input.no{border-color:var(--bad);background:var(--bad-bg)}
+.feedback{min-height:28px;margin:18px 0 0;font-size:1.0625rem}
+.feedback.ok{color:var(--good)}
+.feedback.no{color:var(--bad)}
+.feedback a{font-weight:600}
+.qnext{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+.qmap{position:relative;height:min(56vh,440px);border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--sea);margin-bottom:4px}
+.locmap{position:relative;aspect-ratio:1.92/1;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--sea)}
+.mapsvg{display:block;width:100%;height:100%}
+.qmap .mapsvg{touch-action:none;cursor:grab}
+.sea{fill:var(--sea)}
+.lands path{fill:var(--land);stroke:var(--border);stroke-width:.6px;vector-effect:non-scaling-stroke}
+.dots circle{fill:var(--land);stroke:var(--border);stroke-width:1px;vector-effect:non-scaling-stroke}
+.qmap.live .lands path:hover,.qmap.live .dots circle:hover{fill:var(--soft)}
+.mapsvg .grp{fill:var(--grp)}.mapsvg .ring{fill:none;stroke:var(--accent);stroke-width:2.5px;vector-effect:non-scaling-stroke;pointer-events:none}.mapsvg .sel{fill:var(--accent)!important}.mapsvg .ok{fill:var(--good)!important}.mapsvg .no{fill:var(--bad)!important}
+.mapctl{position:absolute;right:10px;top:10px;display:grid;gap:6px}
+.mapctl button{width:38px;height:38px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-size:1.25rem;line-height:1;cursor:pointer;display:grid;place-items:center}
+.maphint{font-size:.8125rem;color:var(--muted);margin:6px 0 0}
+.qflag.sm{padding:14px;margin-bottom:12px}.qflag.sm .flag{max-height:min(18vh,120px)}
+.daily-flag{position:relative;display:block;line-height:0;max-width:100%}
+.daily-flag .flag{display:block;width:100%;height:auto;max-height:none!important;max-width:none}
+.tiles{position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr)}
+.tiles span{background:var(--soft);box-shadow:inset 0 0 0 1px var(--surface);transition:opacity .35s ease}
+.tiles span.on{opacity:0}
+.guesses{display:grid;gap:8px;margin:18px 0}
+.guess{display:grid;grid-template-columns:44px 1fr auto auto;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.guess .flag{width:44px;height:auto}
+.guess.win{border-color:var(--good);background:var(--good-bg)}
+.guess .km{color:var(--muted);font-size:.9375rem;text-align:right}
+.guess svg{display:block}
+.slots{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:14px 0 0}
+.slots i{height:6px;border-radius:3px;background:var(--soft)}
+.slots i.used{background:var(--ink)}.slots i.won{background:var(--good)}
+.dstats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:20px 0}
+.dstats dt{font-size:.8125rem;color:var(--muted)}.dstats dd{margin:0;font-family:var(--display);font-weight:800;font-size:2rem;line-height:1}
+.dmsg{min-height:1.5em;color:var(--bad);margin:8px 0 0}
+.tabs{display:flex;gap:4px;background:var(--soft);padding:4px;border-radius:999px;width:max-content;max-width:100%;overflow-x:auto;margin:18px 0 28px}
+.tabs button{border:none;background:none;padding:8px 14px;border-radius:999px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tabs button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.lwrap{padding:32px 0 80px}
+.lwrap > h1,.qwrap h1.lt{font-family:var(--display);font-weight:800;font-size:clamp(2.8rem,9vw,5.25rem);line-height:.88;margin:0 0 12px}
+.lwrap > .lede{color:var(--muted);max-width:34em;margin:0 0 28px}
+.ugroup{margin-top:40px}
+.ugroup h2{font-family:var(--display);font-weight:800;font-size:2rem;line-height:1;margin:0 0 14px}
+.ucards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.ucard{display:flex;flex-direction:column;gap:12px;padding:16px;border:1px solid var(--line);background:var(--surface);border-radius:12px;text-decoration:none;color:inherit}
+.ucard:hover{border-color:var(--ink)}
+.ucard b{font-size:1.0625rem;line-height:1.25}
+.ustrip{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end;min-height:22px}
+.ustrip .flag{height:22px;width:auto}
+.ustat{font-size:.875rem;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.ustat .done{color:var(--good);font-weight:600}
+.unext{display:flex;flex-wrap:wrap;align-items:center;gap:16px 24px;padding:20px;border-radius:12px;background:var(--ink);color:var(--bg)}
+.unext .ustrip .flag{height:30px}
+.unext div{flex:1 1 240px}.unext b{display:block;font-family:var(--display);font-weight:800;font-size:1.75rem;line-height:1.05;margin-top:2px}
+.unext small{opacity:.75;font-size:.875rem}
+.unext .btn{background:var(--bg);color:var(--ink)}
+.meet .qflag{margin-bottom:0}
+.meetvis{display:grid;gap:12px;margin-bottom:22px}
+.meetvis .locmap{aspect-ratio:1.92/1}
+.maplegend{display:flex;gap:16px;flex-wrap:wrap;font-size:.8125rem;color:var(--muted);margin:-4px 0 0}
+.maplegend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+@media (min-width:720px){.meetvis{grid-template-columns:1fr 1fr;align-items:stretch}.meetvis .qflag{height:100%;align-items:center}.meetvis .locmap{aspect-ratio:auto;min-height:240px}.maplegend{grid-column:2}}
+.meet h2{font-family:var(--display);font-weight:800;font-size:clamp(2.2rem,8vw,3.5rem);line-height:.95;margin:0 0 10px}
+.hook{font-size:1.25rem;line-height:1.45;max-width:32em;margin:0 0 12px}
+.subtle{color:var(--muted);font-size:.9375rem;max-width:36em;margin:0}
+.thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:26px}
+.thumbs button{padding:4px;border:2px solid transparent;border-radius:7px;background:none;cursor:pointer;line-height:0}
+.thumbs button[aria-current="true"]{border-color:var(--ink)}
+.thumbs .flag{height:28px;width:auto}
+.cmp{padding:18px;border:1px solid var(--line);border-radius:12px;background:var(--surface);margin-bottom:14px}
+.cmpflags{display:flex;gap:18px;flex-wrap:wrap;margin-bottom:14px}
+.cmpflags figure{margin:0;display:flex;flex-direction:column;gap:6px;font-size:.875rem;font-weight:600}
+.cmpflags .flag{height:64px;width:auto}
+.cmp p{margin:0;max-width:40em}
+.recap{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.recap a{display:flex;flex-direction:column;gap:8px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);text-decoration:none;color:inherit}
+.recap .fb2{height:56px;display:flex;align-items:flex-end}.recap .flag{max-height:56px;width:auto;max-width:100%}
+.recap b{line-height:1.2}.recap span{font-size:.875rem;color:var(--muted);line-height:1.4}
+.say{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin:2px 0 8px;font-size:1.0625rem;color:var(--muted)}
+.say b{color:var(--ink);font-weight:600;letter-spacing:.01em}
+.say small{flex-basis:100%;font-size:.875rem}
+.saybtn{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;padding:0}
+.saybtn:hover{border-color:var(--ink)}.saybtn.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.spot{margin-top:28px;padding:16px 18px;border-left:3px solid var(--accent);background:var(--surface);border-radius:0 10px 10px 0}
+.spot h3{margin:0 0 4px;font-size:1rem}.spot p{margin:0 0 6px;font-size:1.0625rem}.spot a{font-weight:600;font-size:.9375rem}
+.tip{margin:10px 0 0;padding:12px 14px;border-left:3px solid var(--ink);background:var(--surface);border-radius:0 8px 8px 0;font-size:.9375rem;max-width:40em}
+.progress{margin:0 0 28px;padding:18px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.pbar{display:flex;height:8px;border-radius:4px;background:var(--soft);overflow:hidden}
+.pbar .pm{background:var(--good)}.pbar .pl{background:var(--accent);opacity:.55}
+.pstats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 10px}
+.pstats dt{font-size:.8125rem;color:var(--muted)}.pstats dd{margin:0;font-family:var(--display);font-weight:800;font-size:2rem;line-height:1}
+.progress p{margin:0;color:var(--muted);font-size:.875rem;max-width:40em}
+.score{font-family:var(--display);font-weight:800;font-size:clamp(5rem,22vw,10rem);line-height:1;margin:8px 0 16px}
+.missed{display:grid;gap:10px;margin:14px 0 28px}
+.missed a{display:flex;align-items:center;gap:14px;text-decoration:none;color:inherit;padding:8px 0;border-bottom:1px solid var(--line)}
+.missed .flag{height:32px;width:auto}
+.missed em{font-style:normal;color:var(--muted);font-size:.875rem;margin-left:auto;text-align:right}
+footer{border-top:1px solid var(--line);color:var(--muted);font-size:.8125rem;padding:20px 0 32px}
+@media (max-width:560px){
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 16px}
+  .fbox{height:84px}.fbox .flag{max-height:84px}
+  .flabel,.qopts .flabel{min-width:100%}
+  .top .wrap{height:56px}
+  nav{gap:0}nav a{padding:7px 9px;font-size:.9375rem}
+  .mark{font-size:1.15rem;gap:28px}.mk-full{display:none}.mk-short{display:inline}nav a{padding:7px 11px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="mark" href="#browse" aria-label="Flags of the World, home"><i aria-hidden="true"></i><span class="mk-full">Flags of the World</span><span class="mk-short">Flags</span></a>
+  <nav aria-label="Main"><a href="#browse" id="nav-browse">Browse</a><a href="#learn" id="nav-learn">Learn</a><a href="#quiz" id="nav-quiz">Quiz</a><a href="#daily" id="nav-daily">Daily</a></nav>
+</div></header>
+<main id="app" class="wrap" tabindex="-1"></main>
+<footer><div class="wrap">Flag artwork from the public-domain country-flags collection. Country data from the world-countries dataset.</div></footer>
+<script>
+const DATA=__DATA__;
+const SVG=__SVG__;
+const MAP=__MAP__;
+</script>
+<script>
+(()=>{
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const C=DATA.countries.slice().sort((a,b)=>a.n.localeCompare(b.n));
+const BY={};C.forEach(c=>BY[c.c]=c);
+const REGIONS=['Africa','Americas','Asia','Europe','Oceania','Antarctic'];
+const COLORS=[['red','#D52B1E'],['orange','#F08A1C'],['yellow','#F6C800'],['green','#14884A'],['blue','#1E4FA6'],['purple','#6B3FA0'],['white','#FFFFFF'],['black','#000000']];
+const CNAME={red:'Red',orange:'Orange',yellow:'Yellow',green:'Green',blue:'Blue',purple:'Purple',white:'White',black:'Black'};
+const SORTS=[['name','Name, A to Z'],['name-desc','Name, Z to A'],['area-desc','Largest area first'],['area','Smallest area first'],['colors','Fewest colors first'],['colors-desc','Most colors first']];
+const app=$('#app');
+
+// storage
+const KEY='fotw-v1';
+let store={stats:{},best:{},srs:{}};
+try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&s.stats)store=s}catch(e){}
+if(!store.srs)store.srs={};if(!store.best)store.best={};
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}};
+
+const img=(c,cls='flag',alt)=>`<img class="${cls}" src="${SVG[c.c]}" alt="${esc(alt===undefined?'Flag of '+c.n:alt)}" width="${Math.round(60*c.ratio)}" height="60" loading="lazy" decoding="async">`;
+const colorSet=c=>new Set(c.col.map(x=>x.f));
+function ratioText(r){if(r<1)return 'Not rectangular';let best=[1,1],err=9;for(let h=1;h<=30;h++){const w=Math.round(r*h);const e=Math.abs(w/h-r);if(e<err-1e-6){err=e;best=[h,w]}if(e<.004)break}return best[0]+':'+best[1]}
+const fmtArea=a=>a?Math.round(a).toLocaleString('en-US')+' km²':'Unknown';
+
+// browse state
+const B={q:'',region:'',colors:new Set(),exact:false,styles:new Set(),sov:false,sort:'name',showStyles:false,scroll:0};
+
+function filtered(){
+  const q=norm(B.q);
+  let list=C.filter(c=>{
+    if(B.region&&c.r!==B.region)return false;
+    if(B.sov&&!c.ind)return false;
+    if(B.colors.size){const s=colorSet(c);for(const x of B.colors)if(!s.has(x))return false;if(B.exact&&[...s].some(x=>!B.colors.has(x)))return false}
+    for(const t of B.styles)if(!c.tags.includes(t))return false;
+    if(q){const hay=[c.n,c.o,...c.cap,...c.alts,c.sr].map(norm);if(!hay.some(h=>h.includes(q)))return false}
+    return true});
+  const s=B.sort;
+  list.sort((a,b)=>s==='name-desc'?b.n.localeCompare(a.n):s==='area-desc'?(b.area||0)-(a.area||0):s==='area'?(a.area||0)-(b.area||0):s==='colors'?a.col.length-b.col.length||a.n.localeCompare(b.n):s==='colors-desc'?b.col.length-a.col.length||a.n.localeCompare(b.n):a.n.localeCompare(b.n));
+  return list}
+
+function paletteHTML(){
+  const tot={};COLORS.forEach(([f])=>tot[f]=0);
+  C.forEach(c=>c.col.forEach(x=>{tot[x.f]+=x.p}));
+  const sum=Object.values(tot).reduce((a,b)=>a+b,0);
+  const rows=COLORS.map(([f,h])=>({f,h,p:tot[f]/sum*100})).sort((a,b)=>b.p-a.p);
+  return `<div class="palette" aria-label="Share of each color across all flags">
+    <div class="palette-bar" aria-hidden="true">${rows.map(r=>`<span style="width:${r.p}%;background:${r.h}"></span>`).join('')}</div>
+    <div class="palette-key">${rows.filter(r=>r.p>=1).map(r=>`<span>${CNAME[r.f]} <b>${Math.round(r.p)}%</b></span>`).join('')}</div></div>`}
+
+function renderBrowse(){
+  app.innerHTML=`
+  <section class="hero">
+    <h1>Flags of<br>the World</h1>
+    <p>All ${C.length} flags of countries and territories, with the stories behind them. Browse and filter, open any flag for details, or test yourself.</p>
+    ${paletteHTML()}
+    <p style="margin-top:4px;font-size:.875rem">How much of each color appears across every flag combined.</p>
+  </section>
+  <section class="controls" aria-label="Search and filters">
+    <div class="searchrow">
+      <label class="search"><span class="sr">Search flags</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Search by country or capital" value="${esc(B.q)}" autocomplete="off"></label>
+      <label><span class="sr">Sort</span><select id="sort">${SORTS.map(([v,l])=>`<option value="${v}"${B.sort===v?' selected':''}>${l}</option>`).join('')}</select></label>
+      <button class="ftoggle" id="ftoggle" aria-expanded="${!!B.panel}" aria-controls="fpanel">Filters<span id="fcount"></span></button>
+    </div>
+    <div class="fpanel${B.panel?' open':''}" id="fpanel">
+    <div class="frow"><span class="flabel" id="lab-r">Region</span><div class="chips" role="group" aria-labelledby="lab-r">
+      <button class="chip" data-region="" aria-pressed="${!B.region}">All</button>
+      ${REGIONS.map(r=>`<button class="chip" data-region="${r}" aria-pressed="${B.region===r}">${r}</button>`).join('')}</div></div>
+    <div class="frow"><span class="flabel" id="lab-c">Colors</span><div class="chips" role="group" aria-labelledby="lab-c">
+      ${COLORS.map(([f,h])=>`<button class="sw" data-color="${f}" style="background:${h}" aria-pressed="${B.colors.has(f)}" aria-label="${CNAME[f]}" title="${CNAME[f]}"></button>`).join('')}</div>
+      <label class="toggle" style="margin-left:6px"><input type="checkbox" id="exact"${B.exact?' checked':''}> Only these colors</label></div>
+    <div class="frow"><span class="flabel" id="lab-s">Style</span><div class="chips" role="group" aria-labelledby="lab-s" id="stylechips"></div></div>
+    <div class="frow"><label class="toggle"><input type="checkbox" id="sov"${B.sov?' checked':''}> Sovereign states only</label></div>
+    </div>
+    <div class="status" aria-live="polite"><span id="count"></span><button class="linkbtn" id="clear" hidden>Clear filters</button></div>
+  </section>
+  <section class="grid" id="grid" aria-label="Flags"></section>`;
+  drawStyles();drawGrid();
+  const qi=$('#q');qi.addEventListener('input',()=>{B.q=qi.value;drawGrid()});
+  $('#sort').addEventListener('change',e=>{B.sort=e.target.value;drawGrid()});
+  $('#exact').addEventListener('change',e=>{B.exact=e.target.checked;drawGrid()});
+  $('#sov').addEventListener('change',e=>{B.sov=e.target.checked;drawGrid()});
+  $('#ftoggle').addEventListener('click',e=>{B.panel=!B.panel;$('#fpanel').classList.toggle('open',B.panel);e.currentTarget.setAttribute('aria-expanded',B.panel)});
+  $('#clear').addEventListener('click',()=>{Object.assign(B,{q:'',region:'',exact:false,sov:false});B.colors.clear();B.styles.clear();renderBrowse()});
+  app.querySelectorAll('[data-region]').forEach(b=>b.addEventListener('click',()=>{B.region=b.dataset.region;app.querySelectorAll('[data-region]').forEach(x=>x.setAttribute('aria-pressed',x===b));drawGrid()}));
+  app.querySelectorAll('[data-color]').forEach(b=>b.addEventListener('click',()=>{const f=b.dataset.color;B.colors.has(f)?B.colors.delete(f):B.colors.add(f);b.setAttribute('aria-pressed',B.colors.has(f));drawGrid()}));
+}
+const STYLE_TOP=['hstripes','vstripes','cross','nordic','diagonal','triangle','canton','stars','crescent','emblem'];
+function drawStyles(){
+  const el=$('#stylechips');const keys=Object.keys(DATA.styles);
+  const shown=B.showStyles?keys:keys.filter(k=>STYLE_TOP.includes(k)||B.styles.has(k));
+  el.innerHTML=shown.map(k=>`<button class="chip" data-style="${k}" aria-pressed="${B.styles.has(k)}">${DATA.styles[k]}</button>`).join('')+
+    `<button class="more" id="morestyles">${B.showStyles?'Fewer styles':'More styles'}</button>`;
+  el.querySelectorAll('[data-style]').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.style;B.styles.has(k)?B.styles.delete(k):B.styles.add(k);b.setAttribute('aria-pressed',B.styles.has(k));drawGrid()}));
+  $('#morestyles').addEventListener('click',()=>{B.showStyles=!B.showStyles;drawStyles()});
+}
+function drawGrid(){
+  const list=filtered();const g=$('#grid');
+  const active=B.q||B.region||B.colors.size||B.styles.size||B.sov||B.exact;
+  $('#count').innerHTML=`Showing <b>${list.length}</b> of ${C.length} flags`;
+  $('#clear').hidden=!active;
+  const nf=(B.region?1:0)+B.colors.size+B.styles.size+(B.sov?1:0)+(B.exact?1:0);$('#fcount').textContent=nf?` (${nf})`:'';
+  if(!list.length){g.innerHTML=`<div class="empty" style="grid-column:1/-1"><h2>No flags match</h2><p>Try removing a color or style, or clear the filters to see every flag.</p></div>`;return}
+  g.innerHTML=list.map(c=>`<a class="tile" href="#flag-${c.c}"><div class="fbox">${img(c)}</div><span class="nm">${esc(c.n)}</span><span class="rg">${esc(c.sr||c.r)}</span></a>`).join('');
+}
+
+// detail
+const groupsOf=k=>DATA.lookg.filter(g=>g.m.includes(k));
+function tipFor(a,b){const g=DATA.lookg.find(g=>g.m.includes(a)&&b&&g.m.includes(b));return g?g.tip:''}
+function miniList(codes){return `<div class="mini">${codes.map(k=>BY[k]).filter(Boolean).map(c=>`<a href="#flag-${c.c}"><span class="mbox">${img(c)}</span>${esc(c.n)}</a>`).join('')}</div>`}
+function renderDetail(code){
+  const c=BY[code];if(!c){go('browse');return}
+  const col=c.col;const tot=col.reduce((a,x)=>a+x.p,0);
+  const status=c.un?'UN member state':c.ind?'Sovereign state':'Territory or dependency';
+  const facts=[['Capital',c.cap.join(', ')||'None'],['Region',c.sr?`${c.sr}, ${c.r}`:c.r],['Languages',c.lang.join(', ')||'None listed'],['Currency',c.cur.join(', ')||'None listed'],['Area',fmtArea(c.area)],['Landlocked',c.ll?'Yes':'No'],c.dem?['People',c.dem]:null,['Status',status]].filter(Boolean);
+  const ffacts=[c.st&&c.st[0]?['Adopted',String(c.st[0])]:null,['Proportions',c.c==='np'?'Two stacked pennants':`${ratioText(c.ratio)} (height to width)`],['Colors',String(col.length)]].filter(Boolean);
+  const fams=c.fam.map(k=>DATA.fam[k]);
+  app.innerHTML=`
+  <button class="back" id="back"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>All flags</button>
+  <div class="dhead"><h1>${esc(c.n)}</h1>${sayHTML(c)}${c.o!==c.n?`<p class="off">${esc(c.o)}</p>`:''}</div>
+  <figure class="dflag" style="margin-left:0;margin-right:0">${img(c).replace('loading="lazy"','')}</figure>
+  <div class="strip" aria-hidden="true">${col.map(x=>`<span style="width:${x.p/tot*100}%;background:${x.hex}"></span>`).join('')}</div>
+  <div class="colors">${col.map(x=>`<span><i style="background:${x.hex}"></i>${CNAME[x.f]} <em>${Math.round(x.p)}%</em></span>`).join('')}</div>
+  <div class="cols">
+    <section>
+      <h2>About the flag</h2>
+      ${c.st?`<p class="story">${esc(c.st[1])}</p>`:`<p class="story-meta">The story for this flag hasn’t been written yet.</p>`}
+      ${c.hook?`<div class="spot"><h3>How to spot it</h3><p>${esc(c.hook)}</p><a href="#learn-${c.unit}">Learn it with ${esc(UNITS[c.unit].n)}</a></div>`:''}
+      <dl class="facts" style="margin-top:20px">${ffacts.map(([k,v])=>`<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
+      ${c.tags.length?`<div class="sect"><h3>Style</h3><p>Tap a style to see every flag that shares it.</p><div class="tagrow">${c.tags.map(t=>`<button class="chip" data-tag="${t}">${DATA.styles[t]}</button>`).join('')}</div></div>`:''}
+      ${fams.map(f=>`<div class="sect"><h3>${esc(f.n)}</h3><p>${esc(f.d)}</p>${miniList(f.m.filter(k=>k!==c.c))}</div>`).join('')}
+      ${c.look.length?`<div class="sect"><h3>Often confused with</h3>${groupsOf(c.c).map(g=>`<p>${esc(g.tip)}</p>`).join('')}${miniList(c.look)}</div>`:''}
+    </section>
+    <section>
+      <h2>About ${c.n.length>22?'the country':esc(c.n)}</h2>
+      <dl class="facts">${facts.map(([k,v])=>`<dt>${k}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
+      ${hasMap(c.c)?`<div class="sect"><h3>Where it is</h3><div class="locmap" id="locmap"></div></div>`:''}
+      ${c.nb.length?`<div class="sect"><h3>Neighbors</h3><p>Countries that share a land border.</p>${miniList(c.nb)}</div>`:''}
+      <div class="sect"><a class="btn" href="#quiz" id="quizregion">Quiz me on ${esc(c.r)}</a></div>
+    </section>
+  </div>`;
+  $('#back').addEventListener('click',()=>go('browse'));
+  const lm=$('#locmap');if(lm){const M=mapFor([c.c]);mountMap(lm,{map:M,box:boxOf([c.c],.8,170,M),marks:{[c.c]:'sel'},ring:c.c})}
+  app.querySelectorAll('[data-tag]').forEach(b=>b.addEventListener('click',()=>{Object.assign(B,{q:'',region:'',exact:false,sov:false,scroll:0});B.colors.clear();B.styles.clear();B.styles.add(b.dataset.tag);if(!STYLE_TOP.includes(b.dataset.tag))B.showStyles=true;go('browse')}));
+  $('#quizregion').addEventListener('click',e=>{e.preventDefault();Q.setup.region=c.r;Q.session=null;go('quiz')});
+}
+
+// map
+const MR=MAP.W/MAP.H;const PAC=Object.assign(MAP.pac,{key:'p'});MAP.key='w';const NODES={};
+const isPac=k=>BY[k]&&BY[k].r==='Oceania';
+const mapFor=codes=>codes.length&&codes.every(k=>isPac(k)&&(PAC.shapes[k]||PAC.pts[k]))?PAC:MAP;
+function mapNode(M){if(!NODES[M.key]){let h=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${M.W} ${M.H}" preserveAspectRatio="xMidYMid meet" class="mapsvg" role="img" aria-label="World map"><path class="sea" d="${M.sph}"/><g class="lands">`;
+  for(const[k,v]of Object.entries(M.shapes))h+=`<path data-c="${k}" d="${v.d}"/>`;h+='</g><g class="dots">';
+  for(const[k,v]of Object.entries(M.shapes))if(v.tiny)h+=`<circle data-c="${k}" cx="${v.c[0]}" cy="${v.c[1]}" r="2"/>`;
+  for(const[k,p]of Object.entries(M.pts))h+=`<circle data-c="${k}" cx="${p[0]}" cy="${p[1]}" r="2"/>`;
+  NODES[M.key]=new DOMParser().parseFromString(h+'</g><circle class="ring" r="0" cx="0" cy="0"/></svg>','image/svg+xml').documentElement}
+  return document.importNode(NODES[M.key],true)}
+const hasMap=k=>!!(MAP.shapes[k]||MAP.pts[k]);
+const cpos=(k,M=MAP)=>M.shapes[k]?M.shapes[k].c:M.pts[k];
+const bnd=(k,M=MAP)=>{const v=M.shapes[k];return v?v.b:(M.pts[k]?[...M.pts[k],...M.pts[k]]:null)};
+function clampBox(b,M=MAP){b.w=Math.max(30,Math.min(b.w,M.W));b.h=b.w/MR;b.x=Math.max(-b.w*.25,Math.min(M.W-b.w*.75,b.x));b.y=Math.max(-b.h*.25,Math.min(M.H-b.h*.75,b.y));return b}
+function boxOf(codes,pad=.12,minW=120,M=MAP){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;codes.forEach(k=>{const b=bnd(k,M);if(!b)return;x0=Math.min(x0,b[0]);y0=Math.min(y0,b[1]);x1=Math.max(x1,b[2]);y1=Math.max(y1,b[3])});
+  if(x0>x1)return{x:0,y:0,w:M.W,h:M.H};let w=Math.max((x1-x0)*(1+pad*2),minW),h=Math.max((y1-y0)*(1+pad*2),minW/MR);if(w/h<MR)w=h*MR;else h=w/MR;
+  const b={x:(x0+x1)/2-w/2,y:(y0+y1)/2-h/2,w,h};if(b.w>=M.W)return{x:0,y:0,w:M.W,h:M.H};return clampBox(b,M)}
+function regionBox(rg){if(rg==='Oceania')return boxOf(C.filter(c=>c.r==='Oceania'&&c.ind).map(c=>c.c),.04,120,PAC);const b=rg&&MAP.reg[rg];if(!b)return{x:0,y:0,w:MAP.W,h:MAP.H};let w=b[2]-b[0],h=b[3]-b[1];if(w/h<MR)w=h*MR;else h=w/MR;return clampBox({x:(b[0]+b[2])/2-w/2,y:(b[1]+b[3])/2-h/2,w,h})}
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function mountMap(el,o){
+  const M=o.map||MAP;const svg=mapNode(M);el.appendChild(svg);let v={...o.box};const home={...o.box};let anim=0;const ring=svg.querySelector('.ring');
+  const apply=()=>{svg.setAttribute('viewBox',`${v.x} ${v.y} ${v.w} ${v.h}`);const r=Math.max(.6,v.w/190);svg.querySelectorAll('.dots circle').forEach(c=>c.setAttribute('r',r));
+    if(o.ring&&cpos(o.ring,M)){const b=bnd(o.ring,M);const small=Math.max(b[2]-b[0],b[3]-b[1])<v.w/22;const p=cpos(o.ring,M);ring.setAttribute('cx',p[0]);ring.setAttribute('cy',p[1]);ring.setAttribute('r',small?v.w/34:0)}
+    o.onView&&o.onView({...v})};
+  function setMarks(m){svg.querySelectorAll('.sel,.ok,.no,.grp').forEach(e=>e.classList.remove('sel','ok','no','grp'));const order=['grp','no','ok','sel'];Object.entries(m||{}).sort((a,b)=>order.indexOf(a[1])-order.indexOf(b[1])).forEach(([k,c])=>svg.querySelectorAll(`[data-c="${k}"]`).forEach(e=>{e.classList.add(c);e.parentNode.appendChild(e)}))}
+  function flyTo(b){cancelAnimationFrame(anim);if(reduced){v={...b};apply();return}const a={...v},t0=performance.now();const step=t=>{const p=Math.min(1,(t-t0)/450),e=1-Math.pow(1-p,3);v={x:a.x+(b.x-a.x)*e,y:a.y+(b.y-a.y)*e,w:a.w+(b.w-a.w)*e,h:a.h+(b.h-a.h)*e};apply();if(p<1)anim=requestAnimationFrame(step)};anim=requestAnimationFrame(step)}
+  setMarks(o.marks);apply();
+  if(o.interactive){
+    el.classList.add('live');
+    const ctl=document.createElement('div');ctl.className='mapctl';ctl.innerHTML='<button type="button" aria-label="Zoom in">+</button><button type="button" aria-label="Zoom out">−</button><button type="button" aria-label="Reset view">⟲</button>';el.appendChild(ctl);
+    const scale=()=>{const r=svg.getBoundingClientRect();return Math.max(v.w/r.width,v.h/r.height)};
+    const toPt=(cx,cy)=>{const r=svg.getBoundingClientRect(),s=scale();return{x:v.x+(cx-r.left-(r.width-v.w/s)/2)*s,y:v.y+(cy-r.top-(r.height-v.h/s)/2)*s}};
+    const zoomAt=(p,f)=>{cancelAnimationFrame(anim);const nw=Math.max(30,Math.min(M.W,v.w*f)),k=nw/v.w;v={x:p.x-(p.x-v.x)*k,y:p.y-(p.y-v.y)*k,w:nw,h:nw/MR};clampBox(v,M);apply()};
+    const [zi,zo,zr]=ctl.querySelectorAll('button');
+    zi.onclick=()=>zoomAt({x:v.x+v.w/2,y:v.y+v.h/2},.6);zo.onclick=()=>zoomAt({x:v.x+v.w/2,y:v.y+v.h/2},1/.6);zr.onclick=()=>flyTo(home);
+    svg.addEventListener('wheel',e=>{e.preventDefault();zoomAt(toPt(e.clientX,e.clientY),Math.exp(e.deltaY*.0016))},{passive:false});
+    const P=new Map();let moved=0,last=null;
+    svg.addEventListener('pointerdown',e=>{svg.setPointerCapture(e.pointerId);P.set(e.pointerId,{x:e.clientX,y:e.clientY});moved=0;last=null});
+    svg.addEventListener('pointermove',e=>{if(!P.has(e.pointerId))return;const pr=P.get(e.pointerId);const dx=e.clientX-pr.x,dy=e.clientY-pr.y;
+      if(P.size===1){moved+=Math.abs(dx)+Math.abs(dy);if(moved>6){const s=scale();cancelAnimationFrame(anim);v.x-=dx*s;v.y-=dy*s;clampBox(v,M);apply()}}
+      P.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      if(P.size===2){moved=99;const [a,b]=[...P.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(last)zoomAt(toPt((a.x+b.x)/2,(a.y+b.y)/2),last/d);last=d}});
+    const up=e=>{const single=P.size===1;P.delete(e.pointerId);if(P.size<2)last=null;if(single&&moved<=6&&o.onPick){let k=null;const hit=document.elementFromPoint(e.clientX,e.clientY);const n=hit&&hit.closest&&hit.closest('[data-c]');if(n&&svg.contains(n))k=n.dataset.c;
+      else{const p=toPt(e.clientX,e.clientY),lim=18*scale();let bd=lim;for(const kk of [...Object.keys(M.shapes),...Object.keys(M.pts)]){const c=cpos(kk,M);const d=Math.hypot(c[0]-p.x,c[1]-p.y);if(d<bd){bd=d;k=kk}}}
+      if(k)o.onPick(k)}};
+    svg.addEventListener('pointerup',up);svg.addEventListener('pointercancel',e=>{P.delete(e.pointerId);last=null});
+  }
+  return{setMarks,flyTo,svg};
+}
+
+// quiz
+const MODES=[
+  ['name','Name the flag','See a flag, pick the country from four.','<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 21V4M5 4h12l-2.5 4L17 12H5"/></svg>'],
+  ['find','Find the flag','See a country, pick its flag from four.','<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="8" height="6" rx="1"/><rect x="13" y="4" width="8" height="6" rx="1"/><rect x="3" y="14" width="8" height="6" rx="1"/><rect x="13" y="14" width="8" height="6" rx="1"/></svg>'],
+  ['look','Lookalikes','Tell apart flags that are easy to mix up, with tips after each one.','<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="9" height="12" rx="1"/><rect x="13" y="6" width="9" height="12" rx="1"/><path d="M6.5 6v12M17.5 6v12" stroke-dasharray="2 2"/></svg>'],
+  ['map','Find on the map','See a flag, tap its country on a world map.','<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>'],
+  ['fam','Flag families','Spot the flag that doesn’t belong to the family.','<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="8" r="3"/><circle cx="17" cy="8" r="3"/><circle cx="7" cy="17" r="3"/><path d="m14.5 14.5 5 5M19.5 14.5l-5 5"/></svg>'],
+  ['type','Type the answer','See a flag, type the country. Small typos are accepted.','<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>']];
+const Q={setup:{mode:'name',region:'',len:10,sov:true,pick:'smart'},session:null};
+const DAY=864e5,IV=[0,6e5,DAY,3*DAY,7*DAY,21*DAY];
+function srsOf(k){return store.srs[k]}
+function level(k){const r=store.srs[k];return !r?'new':r.b>=4?'mastered':'learning'}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function poolFor(s){if(s.mode==='fam')return Object.keys(DATA.fam);if(s.mode==='map')return C.filter(c=>hasMap(c.c)&&(!s.region||c.r===s.region)&&(!s.sov||c.ind));if(s.mode==='look')return C.filter(c=>c.look.length&&(!s.region||c.r===s.region));return C.filter(c=>(!s.region||c.r===s.region)&&(!s.sov||c.ind))}
+function smartOrder(pool){const now=Date.now();const due=[],fresh=[],rest=[];pool.forEach(c=>{const r=store.srs[c.c];if(!r)fresh.push(c);else if(r.d<=now)due.push(c);else rest.push(c)});due.sort((a,b)=>store.srs[a.c].d-store.srs[b.c].d);rest.sort((a,b)=>store.srs[a.c].d-store.srs[b.c].d);return [...due,...shuffle(fresh),...rest]}
+function optsFor(t,mode,dpool){if(mode==='type'||mode==='map')return null;if(mode==='look'){const g=shuffle(t.look.map(k=>BY[k]).filter(Boolean)).slice(0,3);const rest=distractors(t,dpool.filter(c=>!g.includes(c)),3-g.length).filter(c=>c!==t);return shuffle([t,...g,...rest.slice(0,3-g.length)])}return distractors(t,dpool)}
+function distractors(t,pool,n=3){
+  const tc=colorSet(t);const cand=pool.filter(c=>c.c!==t.c&&c.n!==t.n);
+  const pick=[];t.look.forEach(k=>{const c=cand.find(x=>x.c===k);if(c&&pick.length<2)pick.push(c)});
+  const scored=shuffle(cand.filter(c=>!pick.includes(c))).map(c=>{const s=colorSet(c);let inter=0;s.forEach(x=>tc.has(x)&&inter++);const j=inter/(new Set([...s,...tc]).size);return{c,v:j*2+(c.sr===t.sr?.6:0)+(c.r===t.r?.3:0)+Math.random()*.5}}).sort((a,b)=>b.v-a.v);
+  const top=shuffle(scored.slice(0,8));for(const x of top){if(pick.length>=n)break;pick.push(x.c)}
+  return shuffle([t,...pick]);
+}
+function famItem(key){const f=DATA.fam[key];const mem=shuffle(f.m.filter(k=>BY[k])).slice(0,3).map(k=>BY[k]);
+  const fc=new Set();mem.forEach(c=>colorSet(c).forEach(x=>fc.add(x)));const regs=new Set(mem.map(c=>c.r));
+  const cand=C.filter(c=>c.ind&&!f.m.includes(c.c)).map(c=>{const s=colorSet(c);let i=0;s.forEach(x=>fc.has(x)&&i++);return{c,v:i/new Set([...s,...fc]).size*2+(regs.has(c.r)?.5:0)+(f.m.some(k=>(BY[k]&&BY[k].tags.some(t=>c.tags.includes(t))))?.3:0)+Math.random()*.4}}).sort((a,b)=>b.v-a.v);
+  const t=shuffle(cand.slice(0,8))[0].c;return{t,fam:key,opts:shuffle([...mem,t]),ans:null,ok:null}}
+function startQuiz(onlyCodes){
+  const s=Q.setup;let pool=poolFor(s);
+  if(!pool.length)return;
+  if(s.mode==='fam'){const n=s.len==='all'?20:s.len;let keys=[];while(keys.length<n)keys=keys.concat(shuffle(pool));Q.session={mode:'fam',items:keys.slice(0,n).map(famItem),i:0,score:0,done:false};renderQuiz();return}
+  const n=s.len==='all'?pool.length:s.len;
+  let items=onlyCodes?onlyCodes.map(k=>BY[k]):(s.pick==='smart'?smartOrder(pool):shuffle(pool)).slice(0,n);
+  const dpool=s.mode==='look'?C:(pool.length>=4?pool:C);
+  Q.session={mode:s.mode,region:s.region,smart:s.pick==='smart'&&!onlyCodes,dpool,box:s.mode==='map'?regionBox(s.region):null,mapset:s.mode==='map'&&s.region==='Oceania'?'p':'w',items:items.map(t=>({t,opts:optsFor(t,s.mode,dpool),ans:null,ok:null})),i:0,score:0,done:false};
+  renderQuiz();
+}
+function renderQuiz(){
+  if(!Q.session)return renderSetup();
+  if(Q.session.done)return renderResults();
+  renderQuestion();
+}
+function renderSetup(){
+  const s=Q.setup;const pool=poolFor(s);
+  const lv={mastered:0,learning:0,new:0};if(s.mode!=='fam')pool.forEach(c=>lv[level(c.c)]++);const now=Date.now();const due=pool.filter(c=>{const r=store.srs[c.c];return r&&r.d<=now}).length;const P=pool.length||1;
+  app.innerHTML=`<div class="qwrap">
+    <h1>Test yourself</h1>
+    <p class="lede">Pick a way to play, narrow it to a region if you like, and go.</p>
+    <div class="modes" role="group" aria-label="Quiz type">${MODES.map(([k,t,d,ic])=>`<button class="mode" data-mode="${k}" aria-pressed="${s.mode===k}"><span class="ic" aria-hidden="true">${ic}</span><b>${t}</b><span>${d}</span></button>`).join('')}</div>
+    <div class="qopts">
+      ${s.mode==='fam'?'':`<div class="frow"><span class="flabel" id="ql-r">Region</span><div class="chips" role="group" aria-labelledby="ql-r"><button class="chip" data-qr="" aria-pressed="${!s.region}">Whole world</button>${REGIONS.filter(r=>r!=='Antarctic').map(r=>`<button class="chip" data-qr="${r}" aria-pressed="${s.region===r}">${r}</button>`).join('')}</div></div>`}
+      <div class="frow"><span class="flabel" id="ql-l">Questions</span><div class="chips" role="group" aria-labelledby="ql-l">${(s.mode==='fam'?[10,20]:[10,20,'all']).map(v=>`<button class="chip" data-ql="${v}" aria-pressed="${String(s.len)===String(v)}">${v==='all'?`All ${pool.length}`:v}</button>`).join('')}</div></div>
+      ${s.mode==='fam'?'':`<div class="frow"><span class="flabel" id="ql-p">Order</span><div class="chips" role="group" aria-labelledby="ql-p"><button class="chip" data-qp="smart" aria-pressed="${s.pick==='smart'}">Smart review</button><button class="chip" data-qp="random" aria-pressed="${s.pick==='random'}">Random</button></div></div>`}
+      ${s.mode==='look'||s.mode==='fam'?'':`<div class="frow"><label class="toggle"><input type="checkbox" id="qsov"${s.sov?' checked':''}> Sovereign states only</label></div>`}
+    </div>
+    ${s.mode==='fam'?`<section class="progress"><p>Each round shows four flags. Three belong to a family that shares a history, like the Pan-African colors or the Nordic crosses. Find the one that doesn’t.</p></section>`:`<section class="progress" aria-label="Your progress">
+      <div class="pbar" aria-hidden="true"><span class="pm" style="width:${lv.mastered/P*100}%"></span><span class="pl" style="width:${lv.learning/P*100}%"></span></div>
+      <dl class="pstats"><div><dt>Mastered</dt><dd>${lv.mastered}</dd></div><div><dt>Learning</dt><dd>${lv.learning}</dd></div><div><dt>New</dt><dd>${lv.new}</dd></div><div><dt>Due now</dt><dd>${due}</dd></div></dl>
+      <p>${s.pick==='smart'?'Smart review starts with flags that are due, then brings in new ones. A flag counts as mastered after four correct answers in a row, spaced out over days. Missed flags come back later in the same round.':'Random picks flags from the set in no particular order. Your answers still count toward your progress.'}</p>
+    </section>`}
+    ${pool.length?`<button class="btn" id="start">Start quiz</button>`:`<p class="lede">No lookalike flags in this region. Pick another region.</p>`}
+  </div>`;
+  app.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{s.mode=b.dataset.mode;renderSetup()}));
+  app.querySelectorAll('[data-qr]').forEach(b=>b.addEventListener('click',()=>{s.region=b.dataset.qr;renderSetup()}));
+  app.querySelectorAll('[data-ql]').forEach(b=>b.addEventListener('click',()=>{s.len=b.dataset.ql==='all'?'all':+b.dataset.ql;renderSetup()}));
+  app.querySelectorAll('[data-qp]').forEach(b=>b.addEventListener('click',()=>{s.pick=b.dataset.qp;renderSetup()}));
+  const qs=$('#qsov');if(qs)qs.addEventListener('change',e=>{s.sov=e.target.checked;renderSetup()});
+  const st=$('#start');if(st)st.addEventListener('click',()=>startQuiz());
+}
+function record(t,ok){const r=store.stats[t.c]||(store.stats[t.c]={s:0,c:0});r.s++;if(ok)r.c++;const q=store.srs[t.c]||{b:0,d:0};const now=Date.now();if(!ok){q.b=1;q.d=now}else if(q.d<=now){q.b=Math.min(5,q.b+1);q.d=now+IV[q.b]}store.srs[t.c]=q;save()}
+function renderQuestion(){
+  const S=Q.session;const it=S.items[S.i];const t=it.t;const n=S.items.length;const answered=it.ans!==null;
+  let body='';
+  if(S.mode==='map'){
+    body=`<p class="prompt">Where does this flag fly?</p><div class="qflag sm">${img(t,'flag','Flag to identify').replace('loading="lazy"','')}</div><div class="qmap" id="qmap"></div><p class="maphint">Tap a country. Drag to move, pinch or scroll to zoom. Small countries are marked with dots.</p>`;
+  }else if(S.mode==='find'||S.mode==='fam'){
+    const F=S.mode==='fam'?DATA.fam[it.fam]:null;
+    body=`<p class="prompt">${F?`Which flag isn’t part of ${esc(F.n)}?`:esc(t.n)}</p><div class="answers flags">${it.opts.map((o,i)=>{
+      const cls=answered?(o.c===t.c?' ok':(o.c===it.ans?' no':'')):'';
+      return `<button class="ans fl${cls}" data-pick="${o.c}"${answered?' disabled':''} aria-label="Option ${i+1}${answered?': '+esc(o.n):''}"><kbd aria-hidden="true">${i+1}</kbd>${img(o,'flag','')}<span class="cap">${answered?esc(o.n):''}</span></button>`}).join('')}</div>`;
+  }else{
+    body=`<p class="prompt" aria-live="polite">${S.mode==='type'?'Which country is this?':'Whose flag is this?'}</p><div class="qflag">${img(t,'flag','Flag to identify').replace('loading="lazy"','')}</div>`;
+    if(S.mode==='name'||S.mode==='look'){
+      body+=`<div class="answers names">${it.opts.map((o,i)=>{const cls=answered?(o.c===t.c?' ok':(o.c===it.ans?' no':'')):'';return `<button class="ans${cls}" data-pick="${o.c}"${answered?' disabled':''}><kbd aria-hidden="true">${i+1}</kbd>${esc(o.n)}</button>`}).join('')}</div>`;
+    }else{
+      body+=`<form class="typed" id="tform" autocomplete="off"><label class="sr" for="tin">Country name</label><input id="tin" placeholder="Type a country" ${answered?`value="${esc(it.ans)}" disabled class="${it.ok?'ok':'no'}"`:''} autocapitalize="words" spellcheck="false" enterkeyhint="done"><button class="btn" ${answered?'hidden':''}>Check</button><button type="button" class="btn ghost" id="skip" ${answered?'hidden':''}>Show answer</button></form>`;
+    }
+  }
+  let fb='';
+  if(answered){
+    const picked=S.mode==='type'?whichCountry(it.ans):it.ans;
+    const tip=it.ok?(S.mode==='look'?(groupsOf(t.c)[0]||{}).tip:''):tipFor(t.c,picked)||(S.mode==='look'?(groupsOf(t.c)[0]||{}).tip:'');
+    if(S.mode==='fam'){const F=DATA.fam[it.fam];fb=it.ok?`<p class="feedback ok">Correct. ${esc(t.n)} isn’t one of them.</p>`:`<p class="feedback no">${esc(BY[picked].n)} is part of the family. The odd one out is ${esc(t.n)}.</p>`;fb+=`<p class="tip">${esc(F.d)}</p>`}
+    else if(it.ok)fb=`<p class="feedback ok">Correct. ${S.mode==='find'?'':esc(t.n)+'.'} <a href="#flag-${t.c}">About this flag</a></p>`;
+    else{const pickedC=BY[picked];fb=`<p class="feedback no">${pickedC?`That’s ${esc(pickedC.n)}. `:(S.mode==='type'&&it.ans?'Not quite. ':'')}The answer is ${esc(t.n)}. <a href="#flag-${t.c}">About this flag</a></p>`}
+    if(tip&&S.mode!=='fam')fb+=`<p class="tip">${esc(tip)}</p>`;
+  }
+  app.innerHTML=`<div class="qwrap">
+    <div class="qprog"><span>Question <b>${S.i+1}</b> of ${n}</span><span>Score <b>${S.score}</b></span></div>
+    <div class="bar" aria-hidden="true"><span style="width:${(S.i+(answered?1:0))/n*100}%"></span></div>
+    ${body}
+    <div aria-live="polite">${fb}</div>
+    <div class="qnext">${answered?`<button class="btn" id="next">${S.i+1<n?'Next question':'See results'}</button>`:''}<button class="btn ghost" id="quit">End quiz</button></div>
+  </div>`;
+  app.querySelectorAll('[data-pick]').forEach(b=>b.addEventListener('click',()=>answer(b.dataset.pick)));
+  const qm=$('#qmap');if(qm){const start=S.view||S.box;const marks=answered?(it.ok?{[t.c]:'ok'}:{[t.c]:'ok',[it.ans]:'no'}):{};
+    const QM=S.mapset==='p'&&(PAC.shapes[t.c]||PAC.pts[t.c])?PAC:MAP;const m=mountMap(qm,{map:QM,box:QM===PAC||S.mapset!=='p'?start:{x:0,y:0,w:MAP.W,h:MAP.H},marks,ring:answered?t.c:null,interactive:true,onView:v=>{S.view=v},onPick:k=>{if(it.ans===null)answer(k)}});
+    if(answered)m.flyTo(boxOf(it.ok?[t.c]:[t.c,it.ans],.6,140,QM));else if(S.view){m.flyTo(S.box)}}
+  const f=$('#tform');if(f){f.addEventListener('submit',e=>{e.preventDefault();const v=$('#tin').value.trim();if(!v){$('#tin').focus();return}answer(v)});$('#skip').addEventListener('click',()=>answer(''));if(!answered)$('#tin').focus({preventScroll:true})}
+  const nx=$('#next');if(nx){nx.addEventListener('click',next);nx.focus({preventScroll:true})}
+  $('#quit').addEventListener('click',()=>{Q.session.done=true;Q.session.quit=true;renderResults()});
+}
+function answer(v){
+  const S=Q.session;const it=S.items[S.i];if(it.ans!==null)return;
+  let ok;if(S.mode==='type'){ok=v?matchTyped(v,it.t):false}else ok=v===it.t.c;
+  it.ans=v;it.ok=ok;if(ok)S.score++;if(S.mode!=='fam')record(it.t,ok);
+  if(!ok&&S.smart&&!it.again&&S.items.length-S.i>1){const at=Math.min(S.items.length,S.i+4);S.items.splice(at,0,{t:it.t,opts:optsFor(it.t,S.mode,S.dpool),ans:null,ok:null,again:true})}
+  renderQuestion();
+}
+function next(){const S=Q.session;S.view=null;if(S.i+1<S.items.length){S.i++;renderQuestion();window.scrollTo(0,0)}else{S.done=true;renderResults()}}
+function renderResults(){
+  const S=Q.session;const done=S.items.filter(x=>x.ans!==null);const n=done.length;const seen=new Set();const missed=done.filter(x=>!x.ok&&!seen.has(x.t.c)&&seen.add(x.t.c));
+  const pct=n?Math.round(S.score/n*100):0;
+  const mk=S.mode+'|'+(Q.setup.region||'world');if(n>=10&&!S.quit){const b=store.best[mk];if(!b||pct>b){store.best[mk]=pct;save()}}
+  const best=store.best[mk];
+  app.innerHTML=`<div class="qwrap">
+    <h1>${n?(pct===100?'Perfect round':pct>=80?'Strong round':pct>=50?'Good start':'Keep practicing'):'Quiz ended'}</h1>
+    ${n?`<p class="score">${S.score}/${n}</p><p class="lede">${pct}% correct${best!==undefined?`. Your best for this quiz is ${best}%.`:'.'}</p>`:`<p class="lede">You ended before answering any questions.</p>`}
+    ${missed.length?`<h2 style="font-family:var(--display);font-size:1.75rem;margin:28px 0 0">Flags to review</h2><div class="missed">${missed.map(x=>`<a href="#flag-${x.t.c}">${img(x.t)}<span>${esc(x.t.n)}</span><em>${S.mode==='type'?(x.ans?'You typed '+esc(x.ans):'Skipped'):(BY[x.ans]?'You picked '+esc(BY[x.ans].n):'')+(x.again?'':'')}</em></a>`).join('')}</div>`:''}
+    <div class="qnext">${missed.length&&S.mode!=='fam'?`<button class="btn" id="retry">Retry the ${missed.length} I missed</button>`:''}<button class="btn ${missed.length&&S.mode!=='fam'?'ghost':''}" id="again">New quiz</button></div>
+  </div>`;
+  const r=$('#retry');if(r)r.addEventListener('click',()=>startQuiz(missed.map(x=>x.t.c)));
+  $('#again').addEventListener('click',()=>{Q.session=null;renderSetup()});
+}
+document.addEventListener('keydown',e=>{
+  if(route.v!=='quiz'||!Q.session||Q.session.done||e.metaKey||e.ctrlKey||e.altKey)return;
+  if(document.activeElement&&document.activeElement.tagName==='INPUT')return;
+  const it=Q.session.items[Q.session.i];
+  if(/^[1-4]$/.test(e.key)&&it.opts&&it.ans===null){const o=it.opts[+e.key-1];if(o)answer(o.c)}
+});
+
+// pronunciation
+const canSpeak='speechSynthesis' in window&&typeof SpeechSynthesisUtterance!=='undefined';
+function sayHTML(c,note=true){if(!c.pr)return '';return `<p class="say"><span>Say it:</span> <b>${esc(c.pr)}</b>${canSpeak?`<button type="button" class="saybtn" data-say="${c.c}" aria-label="Hear ${esc(c.n)} spoken"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></button>`:''}${note&&c.prn?`<small>${esc(c.prn)}</small>`:''}</p>`}
+let voice=null;function pickVoice(){try{const vs=speechSynthesis.getVoices();voice=vs.find(v=>/^en(-|_)(US|GB)/i.test(v.lang)&&/natural|google|samantha|daniel/i.test(v.name))||vs.find(v=>/^en/i.test(v.lang))||null}catch(e){}}
+if(canSpeak){pickVoice();try{speechSynthesis.addEventListener('voiceschanged',pickVoice)}catch(e){}}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-say]');if(!b||!canSpeak)return;const c=BY[b.dataset.say];
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(c.tts||c.n);u.lang='en-US';if(voice)u.voice=voice;u.rate=.9;b.classList.add('on');u.onend=u.onerror=()=>b.classList.remove('on');speechSynthesis.speak(u)}catch(err){b.classList.remove('on')}});
+
+// learn
+const UNITS={};DATA.units.forEach(u=>UNITS[u.id]=u);
+const CONT=['Americas','Europe','Africa','Asia','Oceania'];
+const L={id:null,step:'meet',i:0,pr:null};
+const learned=id=>!!(store.learn&&store.learn[id]);
+const mastered=u=>u.m.filter(k=>level(k)==='mastered').length;
+function nextUnit(after){const A=DATA.units;const i=after?A.findIndex(u=>u.id===after):-1;for(let k=1;k<=A.length;k++){const u=A[(i+k)%A.length];if(!learned(u.id)&&u.id!==after)return u}return null}
+function strip(codes){return `<span class="ustrip" aria-hidden="true">${codes.map(k=>img(BY[k],'flag','')).join('')}</span>`}
+function renderLearnHome(){
+  const nx=nextUnit();const done=DATA.units.filter(u=>learned(u.id)).length;
+  app.innerHTML=`<div class="lwrap">
+    <h1>Learn the flags</h1>
+    <p class="lede">All ${DATA.units.reduce((a,u)=>a+u.m.length,0)} sovereign states in ${DATA.units.length} short units, grouped by where they are. Meet each flag with one thing to remember it by, compare the ones that look alike, then practice until they stick. ${done?`You’ve learned ${done} of ${DATA.units.length} units.`:''}</p>
+    ${nx?`<a class="unext" href="#learn-${nx.id}" style="text-decoration:none"><div><small>${done?'Up next':'Start here'}</small><b>${esc(nx.n)}</b>${strip(nx.m)}</div><span class="btn">${done?'Continue':'Start learning'}</span></a>`:`<div class="unext"><div><small>All done</small><b>Every unit learned</b></div><a class="btn" href="#quiz">Keep it fresh in the quiz</a></div>`}
+    ${CONT.map(ct=>`<section class="ugroup"><h2>${ct}</h2><div class="ucards">${DATA.units.filter(u=>u.r===ct).map(u=>{const m=mastered(u);
+      return `<a class="ucard" href="#learn-${u.id}"><b>${esc(u.n)}</b>${strip(u.m)}<span class="ustat"><span>${u.m.length} flags${m?`, ${m} mastered`:''}</span>${learned(u.id)?'<span class="done">Learned ✓</span>':''}</span></a>`}).join('')}</div></section>`).join('')}
+  </div>`;
+}
+function renderUnit(id){
+  const u=UNITS[id];if(!u){go('learn');return}
+  if(L.id!==id){L.id=id;L.step='meet';L.i=0;L.pr=null}
+  const steps=[['meet','Meet'],['compare','Compare'],['practice','Practice'],['recap','Recap']];
+  let body='';
+  if(L.step==='meet'){const c=BY[u.m[L.i]];const last=L.i===u.m.length-1;
+    body=`<div class="meet"><div class="qprog"><span>Flag <b>${L.i+1}</b> of ${u.m.length}</span></div>
+      <div class="meetvis"><div class="qflag">${img(c).replace('loading="lazy"','')}</div>${hasMap(c.c)?`<div class="locmap" id="meetmap" role="img" aria-label="Map showing where ${esc(c.n)} is"></div><p class="maplegend" aria-hidden="true"><span><i style="background:var(--accent)"></i>${esc(c.n)}</span><span><i style="background:var(--grp)"></i>Others in this unit</span></p>`:''}</div>
+      <h2>${esc(c.n)}</h2>${sayHTML(c)}<p class="hook">${esc(c.hook)}</p>${c.st?`<p class="subtle">${esc(c.st[1])}</p>`:''}
+      <div class="qnext"><button class="btn ghost" id="prev"${L.i?'':' disabled'}>Previous</button><button class="btn" id="nxt">${last?(u.cmp.length?'Compare lookalikes':'Start practice'):'Next flag'}</button></div>
+      <div class="thumbs" role="group" aria-label="Flags in this unit">${u.m.map((k,i)=>`<button data-i="${i}" aria-current="${i===L.i}" aria-label="${esc(BY[k].n)}">${img(BY[k],'flag','')}</button>`).join('')}</div></div>`}
+  else if(L.step==='compare'){
+    body=(u.cmp.length?u.cmp.map(g=>`<div class="cmp"><div class="cmpflags">${g.m.map(k=>`<figure>${img(BY[k])}<figcaption>${esc(BY[k].n)}</figcaption></figure>`).join('')}</div><p>${esc(g.t)}</p></div>`).join(''):`<p class="subtle">These flags are distinct enough that there’s nothing tricky to compare.</p>`)+`<div class="qnext"><button class="btn" id="topr">Start practice</button></div>`}
+  else if(L.step==='practice')body=practiceHTML(u);
+  else body=`<div class="recap">${u.m.map(k=>{const c=BY[k];return `<a href="#flag-${k}"><span class="fb2">${img(c)}</span><b>${esc(c.n)}</b>${c.pr?`<span>${esc(c.pr)}</span>`:''}<span>${esc(c.hook)}</span></a>`}).join('')}</div>`;
+  app.innerHTML=`<div class="qwrap"><a class="back" href="#learn" style="margin-top:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>All units</a>
+    <h1 class="lt">${esc(u.n)}</h1>
+    <div class="tabs" role="group" aria-label="Steps">${steps.map(([k,l])=>`<button data-step="${k}" aria-pressed="${L.step===k}">${l}</button>`).join('')}</div>
+    ${body}</div>`;
+  app.querySelectorAll('[data-step]').forEach(b=>b.addEventListener('click',()=>{L.step=b.dataset.step;if(L.step==='practice'&&L.pr&&L.pr.done)L.pr=null;renderUnit(id)}));
+  if(L.step==='meet'){const mm=$('#meetmap');if(mm){const k=u.m[L.i];const marks={};u.m.forEach(x=>marks[x]='grp');marks[k]='sel';const M=mapFor(u.m);mountMap(mm,{map:M,box:boxOf(u.m,.18,70,M),marks,ring:k})}
+    $('#prev').onclick=()=>{L.i--;renderUnit(id)};$('#nxt').onclick=()=>{if(L.i<u.m.length-1)L.i++;else L.step=u.cmp.length?'compare':'practice';renderUnit(id)};app.querySelectorAll('[data-i]').forEach(b=>b.onclick=()=>{L.i=+b.dataset.i;renderUnit(id)})}
+  const tp=$('#topr');if(tp)tp.onclick=()=>{L.step='practice';L.pr=null;renderUnit(id)};
+  if(L.step==='practice')bindPractice(u);
+}
+function practiceHTML(u){
+  if(!L.pr)L.pr={q:shuffle(u.m),ans:null,first:new Set(),miss:new Set(),opts:null,done:false};
+  const P=L.pr;
+  if(P.done){const ok=u.m.length-P.miss.size;const nx=nextUnit(u.id);
+    return `<p class="prompt" style="margin-bottom:8px">Unit learned</p><p class="score" style="font-size:clamp(3.5rem,14vw,6rem)">${ok}/${u.m.length}</p><p class="lede">${ok===u.m.length?'Every flag right on the first try.':`${ok} of ${u.m.length} right on the first try, and you kept going until you got the rest.`} These flags now come back in Smart review in the quiz, spaced out so they stick.</p>
+      <div class="qnext">${nx?`<a class="btn" href="#learn-${nx.id}">Next: ${esc(nx.n)}</a>`:''}<button class="btn ghost" id="again2">Practice again</button><a class="btn ghost" href="#learn">All units</a></div>`}
+  const k=P.q[0];const c=BY[k];if(!P.opts)P.opts=shuffle(u.m);
+  const answered=P.ans!==null;
+  let fb='';if(answered){const ok=P.ans===k;const pc=BY[P.ans];
+    fb=ok?`<p class="feedback ok">Correct. ${esc(c.n)}.</p><p class="tip">${esc(c.hook)}</p>`:`<p class="feedback no">That’s not ${esc(pc.n)}. This is ${esc(c.n)}.</p><p class="tip"><b>${esc(c.n)}:</b> ${esc(c.hook)}<br><b>${esc(pc.n)}:</b> ${esc(pc.hook)}</p>`}
+  return `<div class="qprog"><span><b>${u.m.length-P.q.length+(answered&&P.ans===k?1:0)}</b> of ${u.m.length} learned</span><span>${P.q.length-(answered&&P.ans===k?1:0)} to go</span></div>
+    <div class="bar" aria-hidden="true"><span style="width:${(u.m.length-P.q.length+(answered&&P.ans===k?1:0))/u.m.length*100}%"></span></div>
+    <p class="prompt">Whose flag is this?</p><div class="qflag">${img(c,'flag','Flag to identify').replace('loading="lazy"','')}</div>
+    <div class="answers names">${P.opts.map((o,i)=>{const cls=answered?(o===k?' ok':(o===P.ans?' no':'')):'';return `<button class="ans${cls}" data-lp="${o}"${answered?' disabled':''}>${i<9?`<kbd aria-hidden="true">${i+1}</kbd>`:''}${esc(BY[o].n)}</button>`}).join('')}</div>
+    <div aria-live="polite">${fb}</div>
+    ${answered?`<div class="qnext"><button class="btn" id="lnext">${P.q.length===1&&P.ans===k?'Finish':'Next'}</button></div>`:''}`;
+}
+function bindPractice(u){
+  const P=L.pr;const ag=$('#again2');if(ag)ag.onclick=()=>{L.pr=null;renderUnit(u.id)};if(!P||P.done)return;
+  app.querySelectorAll('[data-lp]').forEach(b=>b.onclick=()=>lAnswer(u,b.dataset.lp));
+  const n=$('#lnext');if(n){n.focus({preventScroll:true});n.onclick=()=>{const k=P.q.shift();if(P.ans!==k){P.q.splice(Math.min(P.q.length,2),0,k)}P.ans=null;P.opts=null;if(!P.q.length){P.done=true;store.learn=store.learn||{};store.learn[u.id]=Date.now();save()}renderUnit(u.id);window.scrollTo(0,0)}}
+}
+function lAnswer(u,v){const P=L.pr;if(P.ans!==null)return;const k=P.q[0];const ok=v===k;P.ans=v;
+  if(!P.first.has(k)){P.first.add(k);if(!ok)P.miss.add(k)}
+  record(BY[k],ok);renderUnit(u.id)}
+document.addEventListener('keydown',e=>{if(route.v!=='unit'||e.metaKey||e.ctrlKey||e.altKey)return;if(document.activeElement&&document.activeElement.tagName==='INPUT')return;
+  if(L.step==='meet'){if(e.key==='ArrowRight'){const b=$('#nxt');if(b)b.click()}if(e.key==='ArrowLeft'){const b=$('#prev');if(b&&!b.disabled)b.click()}}
+  if(L.step==='practice'&&L.pr&&L.pr.ans===null&&/^[1-9]$/.test(e.key)){const u=UNITS[L.id];const o=L.pr.opts&&L.pr.opts[+e.key-1];if(o)lAnswer(u,o)}});
+
+// daily
+const dayNum=d=>Math.round(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/DAY);
+const D0=dayNum(new Date(2026,10,7));
+const DPOOL=(()=>{const p=C.filter(c=>c.ind).map(c=>c.c).sort();let x=20261107;const rnd=()=>{x=x+0x6D2B79F5|0;let t=Math.imul(x^x>>>15,1|x);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};for(let i=p.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[p[i],p[j]]=[p[j],p[i]]}return p})();
+function dailyFor(day){const L=DPOOL.length;const i=((day-D0)%L+L)%L;const order=[0,1,2,3,4,5];let x=day*9301+49297;for(let k=5;k>0;k--){x=(x*233280+49297)%2147483647;const j=x%(k+1);[order[k],order[j]]=[order[j],order[k]]}return{code:DPOOL[i],num:day-D0+1,order}}
+function geo(a,b){const R=6371,t=Math.PI/180;const[la1,lo1]=a,[la2,lo2]=b;const dl=(la2-la1)*t,dn=(lo2-lo1)*t;const h=Math.sin(dl/2)**2+Math.cos(la1*t)*Math.cos(la2*t)*Math.sin(dn/2)**2;const d=2*R*Math.asin(Math.min(1,Math.sqrt(h)));
+  const y=Math.sin(dn)*Math.cos(la2*t),x=Math.cos(la1*t)*Math.sin(la2*t)-Math.sin(la1*t)*Math.cos(la2*t)*Math.cos(dn);return{d,b:(Math.atan2(y,x)/t+360)%360}}
+function dailyStats(){const ds=store.daily||{};const keys=Object.keys(ds).map(Number).filter(k=>ds[k].done).sort((a,b)=>a-b);const won=keys.filter(k=>ds[k].win);
+  let cur=0;const today=dayNum(new Date());let k=ds[today]&&ds[today].done?today:today-1;while(ds[k]&&ds[k].win){cur++;k--}
+  let best=0,run=0,prev=null;keys.forEach(k=>{if(ds[k].win){run=prev!==null&&k===prev+1&&ds[prev].win?run+1:1;best=Math.max(best,run)}else run=0;prev=k});
+  return{played:keys.length,pct:keys.length?Math.round(won.length/keys.length*100):0,cur,best}}
+function renderDaily(msg=''){
+  const day=dayNum(new Date());const{code,num,order}=dailyFor(day);const t=BY[code];
+  store.daily=store.daily||{};const st=store.daily[day]||{g:[],done:false,win:false};
+  const shown=st.done?6:Math.min(6,1+st.g.length);const on=new Set(order.slice(0,shown));
+  const rows=st.g.map(k=>{const c=BY[k];if(k===code)return `<div class="guess win">${img(c)}<b>${esc(c.n)}</b><span class="km">Correct</span><span aria-hidden="true">✓</span></div>`;
+    const g=c.ge&&t.ge?geo(c.ge,t.ge):null;return `<div class="guess">${img(c)}<span>${esc(c.n)}</span><span class="km">${g?Math.round(g.d).toLocaleString('en-US')+' km':''}</span>${g?`<svg width="22" height="22" viewBox="0 0 24 24" aria-label="Direction ${Math.round(g.b)} degrees" style="transform:rotate(${g.b}deg)"><path d="M12 3l6 9h-4v9h-4v-9H6z" fill="currentColor"/></svg>`:'<span></span>'}</div>`}).join('');
+  const S=dailyStats();
+  app.innerHTML=`<div class="qwrap">
+    <h1>Daily flag</h1>
+    <p class="lede">Number ${num}. A new flag every day at midnight. Each wrong guess uncovers more of the flag and shows how far away you are.</p>
+    <div class="qflag"><span class="daily-flag" style="width:${Math.round(Math.min(240,240)*(t.ratio<1?t.ratio:t.ratio))}px">${img(t,'flag',st.done?'Flag of '+t.n:'Partly hidden flag').replace('loading="lazy"','')}<span class="tiles" aria-hidden="true">${[0,1,2,3,4,5].map(i=>`<span class="${on.has(i)?'on':''}"></span>`).join('')}</span></span></div>
+    <div class="slots" aria-hidden="true">${[0,1,2,3,4,5].map(i=>`<i class="${i<st.g.length?(st.win&&i===st.g.length-1?'won':'used'):''}"></i>`).join('')}</div>
+    ${st.done?`<p class="feedback ${st.win?'ok':'no'}" style="font-size:1.25rem">${st.win?`Got it in ${st.g.length}. It’s ${esc(t.n)}.`:`Out of guesses. It’s ${esc(t.n)}.`} <a href="#flag-${t.c}">About this flag</a></p>
+      <div class="qnext"><button class="btn" id="share">Share result</button><a class="btn ghost" href="#quiz">Practice in the quiz</a></div><p class="dmsg" id="dmsg" style="color:var(--muted)"></p>
+      <dl class="dstats"><div><dt>Played</dt><dd>${S.played}</dd></div><div><dt>Won</dt><dd>${S.pct}%</dd></div><div><dt>Streak</dt><dd>${S.cur}</dd></div><div><dt>Best streak</dt><dd>${S.best}</dd></div></dl>`
+    :`<form class="typed" id="dform" autocomplete="off" style="margin-top:18px"><label class="sr" for="din">Your guess</label><input id="din" list="dlist" placeholder="Guess a country" autocapitalize="words" spellcheck="false" enterkeyhint="go"><button class="btn">Guess</button></form>
+      <datalist id="dlist">${C.filter(c=>c.ind).map(c=>`<option value="${esc(c.n)}">`).join('')}</datalist><p class="dmsg" role="alert">${esc(msg)}</p>`}
+    <div class="guesses">${rows}</div>
+  </div>`;
+  const f=$('#dform');if(f){f.addEventListener('submit',e=>{e.preventDefault();const k=whichCountry($('#din').value);
+    if(!k){renderDaily('Pick a country from the list.');$('#din').focus();return}
+    if(st.g.includes(k)){renderDaily('You already guessed that one.');$('#din').focus();return}
+    st.g.push(k);if(k===code){st.done=true;st.win=true}else if(st.g.length>=6)st.done=true;store.daily[day]=st;save();renderDaily();const di=$('#din');if(di)di.focus({preventScroll:true})})}
+  const sh=$('#share');if(sh)sh.addEventListener('click',async()=>{const sq=st.g.map(k=>k===code?'🟩':(BY[k].ge&&t.ge&&geo(BY[k].ge,t.ge).d<1500?'🟨':'⬛')).join('');
+    const text=`Flags of the World, daily flag ${num}: ${st.win?st.g.length:'X'}/6\n${sq}`;
+    try{if(navigator.share){await navigator.share({text});return}await navigator.clipboard.writeText(text);$('#dmsg').textContent='Result copied. Paste it anywhere.'}catch(e){$('#dmsg').textContent=text}});
+}
+
+// matching
+function norm(s){return String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/&/g,' and ').replace(/\bsaint\b/g,'st').replace(/[^a-z0-9]+/g,' ').replace(/\bthe\b/g,' ').replace(/\s+/g,' ').trim()}
+function lev(a,b){if(a===b)return 0;const m=a.length,n=b.length;if(Math.abs(m-n)>2)return 9;let p=Array.from({length:n+1},(_,i)=>i);for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n]}
+const NAMES=C.map(c=>({c:c.c,set:[...new Set([c.n,c.o,...c.alts].map(norm))]}));
+function whichCountry(v){const x=norm(v||'');if(!x)return null;const z=NAMES.find(z=>z.set.includes(x));return z?z.c:null}
+function matchTyped(v,t){
+  const x=norm(v);if(!x)return false;
+  const mine=NAMES.find(z=>z.c===t.c).set;
+  if(mine.includes(x))return true;
+  if(NAMES.some(z=>z.c!==t.c&&z.set.includes(x)))return false;
+  const tol=x.length>=9?2:x.length>=5?1:0;
+  return tol>0&&mine.some(m=>lev(x,m)<=tol);
+}
+
+// routing
+let route={v:'browse'};let cameFromBrowse=false;
+function go(v){if(location.hash.slice(1)===v)render();else location.hash=v}
+function render(){
+  const h=location.hash.slice(1);const prev=route.v;
+  if(prev==='browse')B.scroll=window.scrollY;
+  if(h.startsWith('flag-')&&BY[h.slice(5)]){cameFromBrowse=prev==='browse'||prev==='flag';route={v:'flag',c:h.slice(5)};renderDetail(route.c);window.scrollTo(0,0)}
+  else if(h==='quiz'){route={v:'quiz'};renderQuiz();window.scrollTo(0,0)}
+  else if(h==='learn'){route={v:'learn'};renderLearnHome();window.scrollTo(0,0)}
+  else if(h.startsWith('learn-')&&UNITS[h.slice(6)]){const same=route.v==='unit'&&route.u===h.slice(6);route={v:'unit',u:h.slice(6)};renderUnit(route.u);if(!same)window.scrollTo(0,0)}
+  else if(h==='daily'){route={v:'daily'};renderDaily();window.scrollTo(0,0)}
+  else{route={v:'browse'};renderBrowse();if(prev==='flag')requestAnimationFrame(()=>window.scrollTo(0,B.scroll))}
+  const navs={browse:$('#nav-browse'),learn:$('#nav-learn'),unit:$('#nav-learn'),quiz:$('#nav-quiz'),daily:$('#nav-daily')};Object.values(navs).forEach(n=>n.removeAttribute('aria-current'));(navs[route.v]||navs.browse).setAttribute('aria-current','page');
+  document.title=route.v==='flag'?`Flag of ${BY[route.c].n}, Flags of the World`:route.v==='quiz'?'Quiz, Flags of the World':route.v==='daily'?'Daily flag, Flags of the World':route.v==='learn'?'Learn, Flags of the World':route.v==='unit'?`${UNITS[route.u].n}, Learn, Flags of the World`:'Flags of the World';
+}
+window.addEventListener('hashchange',render);
+render();
+})();
+</script>
+</body>
+</html>
