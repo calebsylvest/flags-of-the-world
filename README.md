@@ -28,6 +28,7 @@ npm run build
 | `data/curated2.js` | More flag stories and lookalike tips |
 | `data/units.js` | Learn units, spotting notes and comparisons |
 | `data/pron.js` | Pronunciation respellings, notes and speech hints |
+| `data/daily.js` | Daily flag schedule. Append new codes only; never reorder |
 | `vendor/country-flags/svg` | Flag artwork |
 | `scripts/` | Build steps: optimize flags and measure colors, project the maps, merge data, write `index.html` |
 

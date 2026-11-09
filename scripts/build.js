@@ -14,6 +14,7 @@ for(const c of C){const k=c.cca2.toLowerCase();const f=F[k];
 const famOut={};for(const[k,[n,d,l]]of Object.entries(FAM))famOut[k]={n,d,m:l.split(' ')};
 const {U}=require('../data/units');const units=U.map(([id,n,r,h,cmp])=>({id,n,r,m:Object.keys(h),cmp:cmp.map(([m,t])=>({m,t}))}));const hook={},unitOf={};U.forEach(([id,,,h])=>Object.entries(h).forEach(([k,v])=>{hook[k]=v;unitOf[k]=id}));out.forEach(o=>{if(hook[o.c]){o.hook=hook[o.c];o.unit=unitOf[o.c]}});
 const PR=require('../data/pron');out.forEach(o=>{if(PR.P[o.c]){o.pr=PR.P[o.c];if(PR.NOTE[o.c])o.prn=PR.NOTE[o.c];if(PR.TTS[o.c])o.tts=PR.TTS[o.c]}});
-const lookg=LOOK.map(g=>({m:g.split(' '),tip:TIPS[g]||''}));fs.writeFileSync('build/data.json',JSON.stringify({countries:out,styles:STYLE_LABELS,fam:famOut,lookg,units}));fs.writeFileSync('build/svg.json',JSON.stringify(svg));
+const lookg=LOOK.map(g=>({m:g.split(' '),tip:TIPS[g]||''}));const daily=require('../data/daily');const known=new Set(out.map(o=>o.c));const badDaily=daily.filter(k=>!known.has(k));if(badDaily.length||new Set(daily).size!==daily.length)throw new Error('data/daily.js has unknown or repeated codes: '+badDaily);
+fs.writeFileSync('build/data.json',JSON.stringify({countries:out,styles:STYLE_LABELS,fam:famOut,lookg,units,daily}));fs.writeFileSync('build/svg.json',JSON.stringify(svg));
 console.log(out.length,fs.statSync('build/data.json').size,fs.statSync('build/svg.json').size,Object.keys(S).length);
 const ind=out.filter(x=>x.ind).length;console.log('independent',ind,'untagged',out.filter(x=>!x.tags.length).map(x=>x.c));
