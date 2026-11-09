@@ -733,7 +733,7 @@ function renderDaily(msg=''){
   app.innerHTML=`<div class="qwrap">
     <h1>Daily flag</h1>
     <p class="lede">Number ${num}. A new flag every day at midnight. Each wrong guess uncovers more of the flag and shows how far away you are.</p>
-    <div class="qflag"><span class="daily-flag" style="width:${Math.round(Math.min(240,240)*(t.ratio<1?t.ratio:t.ratio))}px">${img(t,'flag',st.done?'Flag of '+t.n:'Partly hidden flag').replace('loading="lazy"','')}<span class="tiles" aria-hidden="true">${[0,1,2,3,4,5].map(i=>`<span class="${on.has(i)?'on':''}"></span>`).join('')}</span></span></div>
+    <div class="qflag"><span class="daily-flag" style="width:${Math.round(240*t.ratio)}px">${img(t,'flag',st.done?'Flag of '+t.n:'Partly hidden flag').replace('loading="lazy"','')}<span class="tiles" aria-hidden="true">${[0,1,2,3,4,5].map(i=>`<span class="${on.has(i)?'on':''}"></span>`).join('')}</span></span></div>
     <div class="slots" aria-hidden="true">${[0,1,2,3,4,5].map(i=>`<i class="${i<st.g.length?(st.win&&i===st.g.length-1?'won':'used'):''}"></i>`).join('')}</div>
     ${st.done?`<p class="feedback ${st.win?'ok':'no'}" style="font-size:1.25rem">${st.win?`Got it in ${st.g.length}. It’s ${esc(t.n)}.`:`Out of guesses. It’s ${esc(t.n)}.`} <a href="#flag-${t.c}">About this flag</a></p>
       <div class="qnext"><button class="btn" id="share">Share result</button><a class="btn ghost" href="#quiz">Practice in the quiz</a></div><p class="dmsg" id="dmsg" style="color:var(--muted)"></p>
@@ -766,12 +766,12 @@ function matchTyped(v,t){
 }
 
 // routing
-let route={v:'browse'};let cameFromBrowse=false;
+let route={v:'browse'};
 function go(v){if(location.hash.slice(1)===v)render();else location.hash=v}
 function render(){
   const h=location.hash.slice(1);const prev=route.v;
   if(prev==='browse')B.scroll=window.scrollY;
-  if(h.startsWith('flag-')&&BY[h.slice(5)]){cameFromBrowse=prev==='browse'||prev==='flag';route={v:'flag',c:h.slice(5)};renderDetail(route.c);window.scrollTo(0,0)}
+  if(h.startsWith('flag-')&&BY[h.slice(5)]){route={v:'flag',c:h.slice(5)};renderDetail(route.c);window.scrollTo(0,0)}
   else if(h==='quiz'){route={v:'quiz'};renderQuiz();window.scrollTo(0,0)}
   else if(h==='learn'){route={v:'learn'};renderLearnHome();window.scrollTo(0,0)}
   else if(h.startsWith('learn-')&&UNITS[h.slice(6)]){const same=route.v==='unit'&&route.u===h.slice(6);route={v:'unit',u:h.slice(6)};renderUnit(route.u);if(!same)window.scrollTo(0,0)}

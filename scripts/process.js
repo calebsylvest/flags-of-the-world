@@ -9,20 +9,16 @@ function fam(r,g,b){const[h,s,l]=hsl(r,g,b);
  if(h<14||h>=340)return l<.32?'maroon':'red'; // maroon->red group later
  if(h<40)return l<.35?'brown':'orange';if(h<68)return'yellow';if(h<170)return'green';if(h<255)return'blue';if(h<300)return'purple';return'red';}
 for(const c of C){const k=c.cca2.toLowerCase();let svg=fs.readFileSync(`vendor/country-flags/svg/${k}.svg`,'utf8');
- const o=optimize(svg,{multipass:true,floatPrecision:2,plugins:[{name:'preset-default',params:{overrides:{removeViewBox:false}}}]}).data;
+ const o=optimize(svg,{multipass:true,floatPrecision:2,plugins:['preset-default']}).data;
  // ratio
  let vb=o.match(/viewBox="([^"]+)"/);let w,h;if(vb){const p=vb[1].split(/[ ,]+/).map(Number);w=p[2];h=p[3]}else{w=+o.match(/width="([\d.]+)/)[1];h=+o.match(/height="([\d.]+)/)[1]}
- const H=40,W=Math.round(H*w/h);
  const img=new Resvg(o,{fitTo:{mode:'height',value:80},shapeRendering:0}).render();const px=img.pixels;const iw=img.width,ih=img.height;
- const cnt={};const fl=[];let n=0;const sums={};
- for(let i=0;i<iw*ih;i++){const a=px[i*4+3];if(a<200){fl.push(null);continue}const r=px[i*4],g=px[i*4+1],b=px[i*4+2];let f=fam(r,g,b);if(f==='maroon')f='red';if(f==='brown')f='orange';fl.push(f);cnt[f]=(cnt[f]||0)+1;n++;
+ const cnt={};let n=0;const sums={};
+ for(let i=0;i<iw*ih;i++){const a=px[i*4+3];if(a<200)continue;const r=px[i*4],g=px[i*4+1],b=px[i*4+2];let f=fam(r,g,b);if(f==='maroon')f='red';if(f==='brown')f='orange';cnt[f]=(cnt[f]||0)+1;n++;
   const m=sums[f]||(sums[f]={});const key=(r<<16)|(g<<8)|b;m[key]=(m[key]||0)+1}
  const colors=Object.entries(cnt).map(([f,v])=>[f,v/n]).filter(x=>x[1]>=(x[0]==='black'?0.025:0.01)).sort((a,b)=>b[1]-a[1]).map(([f,v])=>{const m=sums[f];const top=+Object.entries(m).sort((a,b)=>b[1]-a[1])[0][0];return{f,p:Math.round(v*1000)/10,hex:'#'+top.toString(16).padStart(6,'0')}});
- // stripe detection: fraction of rows/cols that are uniform family
- const uni=(len,get)=>{let u=0;for(let a=0;a<len.outer;a++){const m={};let t=0;for(let b=0;b<len.inner;b++){const f=get(a,b);if(f){m[f]=(m[f]||0)+1;t++}}const mx=Math.max(0,...Object.values(m));if(t&&mx/t>0.97)u++}return u/len.outer};
- const rows=uni({outer:ih,inner:iw},(y,x)=>fl[y*iw+x]);const cols=uni({outer:iw,inner:ih},(x,y)=>fl[y*iw+x]);
  total+=o.length;
- out[k]={svg:o,ratio:Math.round(w/h*1000)/1000,colors,rows:+rows.toFixed(2),cols:+cols.toFixed(2)};
+ out[k]={svg:o,ratio:Math.round(w/h*1000)/1000,colors};
  
 }
 fs.mkdirSync('build',{recursive:true});fs.writeFileSync('build/flags.json',JSON.stringify(out));console.log('svg bytes',total);

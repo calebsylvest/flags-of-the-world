@@ -15,7 +15,7 @@ for(const f of fc.features){const k=by3[f.id]||named[f.properties.name];if(!k||!
  // use largest polygon for centroid/bounds to avoid overseas spread
  let best=null,ba=-1;const geoms=f.geometry.type==='MultiPolygon'?f.geometry.coordinates.map(c=>({type:'Polygon',coordinates:c})):[f.geometry];
  for(const g of geoms){const a=geoArea(g);if(a>ba){ba=a;best=g}}
- if(choose&&choose[k]){let bd=1e9;for(const g of geoms){const c=geoPath().centroid?null:null;const ll=g.coordinates[0][0];const d=Math.abs(ll[0]-choose[k][0])+Math.abs(ll[1]-choose[k][1]);if(d<bd){bd=d;best=g}}}
+ if(choose&&choose[k]){let bd=1e9;for(const g of geoms){const ll=g.coordinates[0][0];const d=Math.abs(ll[0]-choose[k][0])+Math.abs(ll[1]-choose[k][1]);if(d<bd){bd=d;best=g}}}
  const b=path.bounds(best);const c=path.centroid(best);out[k].b=b.flat().map(v=>Math.round(v*10)/10);out[k].c=c.map(v=>Math.round(v*10)/10);out[k].ab=path.area(f);}
 // dots for missing
 const pts={};for(const c of C){const k=c.cca2.toLowerCase();if(!keep(k))continue;if(!out[k]&&c.latlng&&c.latlng.length){const p=proj([c.latlng[1],c.latlng[0]]);pts[k]=p.map(v=>Math.round(v*10)/10)}}
