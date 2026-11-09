@@ -1,5 +1,7 @@
 # Flags of the World
 
+**Live: https://www.calebsylvest.com/experiments/flags-of-the-world/**
+
 Browse every flag, learn them in small regional units, and test yourself with quizzes, a map game and a daily flag.
 
 The site is static: `index.html` plus `map.json`, which holds the map shapes and loads the first time a map is shown. A service worker (`sw.js`) caches the site so it works offline and can be installed to a phone's home screen. No server, database or API keys. Progress (quiz history, spaced repetition, learned units, daily streaks) is saved in each visitor's browser with `localStorage`.
@@ -48,7 +50,9 @@ npm run build && npm test
 
 ## Deploy
 
-Pushing to `main` runs `.github/workflows/deploy.yml`, which builds the site from source, runs the smoke tests, and deploys it only if they pass to GitHub Pages (Settings, Pages, Source: GitHub Actions). The deployed site always comes from a fresh build; the workflow warns if the committed `index.html` or `map.json` is out of date.
+Pushing to `main` runs `.github/workflows/deploy.yml`, which builds the site from source and runs the smoke tests. If they pass, it deploys to GitHub Pages (Settings, Pages, Source: GitHub Actions). The deployed site always comes from a fresh build; the workflow warns if the committed `index.html`, `map.json` or `sw.js` is out of date.
+
+The public address, www.calebsylvest.com/experiments/flags-of-the-world/, proxies the GitHub Pages copy at calebsylvest.github.io/flags-of-the-world/. The page sends anyone who opens the github.io address straight to the calebsylvest.com one, so saved progress, which browsers keep per domain, stays in one place. Canonical and share URLs also point at calebsylvest.com.
 
 Any other static host works too: serve `index.html`, `map.json`, `og.png`, `sw.js`, `manifest.webmanifest` and `icons/` from one folder.
 
