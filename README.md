@@ -32,6 +32,7 @@ npm run build
 | `data/pron.js` | Pronunciation respellings, notes and speech hints |
 | `data/daily.js` | Daily flag schedule. Append new codes only; never reorder |
 | `vendor/country-flags/svg` | Flag artwork |
+| `og.png` | Social preview image. Regenerate with `node scripts/og.js` after a build |
 | `scripts/` | Build steps: optimize flags and measure colors, project the maps, merge data, write `index.html` and `map.json` |
 
 ## Deploy
