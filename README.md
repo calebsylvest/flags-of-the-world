@@ -2,7 +2,7 @@
 
 Browse every flag, learn them in small regional units, and test yourself with quizzes, a map game and a daily flag.
 
-The site is static: `index.html` plus `map.json`, which holds the map shapes and loads the first time a map is shown. No server, database or API keys. Progress (quiz history, spaced repetition, learned units, daily streaks) is saved in each visitor's browser with `localStorage`.
+The site is static: `index.html` plus `map.json`, which holds the map shapes and loads the first time a map is shown. A service worker (`sw.js`) caches the site so it works offline and can be installed to a phone's home screen. No server, database or API keys. Progress (quiz history, spaced repetition, learned units, daily streaks) is saved in each visitor's browser with `localStorage`.
 
 ## Run it locally
 
@@ -12,11 +12,11 @@ Serve the folder, then open http://localhost:3000:
 npm run serve
 ```
 
-Opening `index.html` straight from disk also works, except for the maps: browsers block loading `map.json` from a `file://` page.
+The service worker is turned off on `localhost`, so you always see your latest build. Opening `index.html` straight from disk also works, except for the maps: browsers block loading `map.json` from a `file://` page.
 
 ## Edit and rebuild
 
-`index.html` and `map.json` are generated. Edit the sources, then rebuild:
+`index.html`, `map.json` and `sw.js` are generated. Edit the sources, then rebuild:
 
 ```sh
 npm install
@@ -32,6 +32,8 @@ npm run build
 | `data/pron.js` | Pronunciation respellings, notes and speech hints |
 | `data/daily.js` | Daily flag schedule. Append new codes only; never reorder |
 | `vendor/country-flags/svg` | Flag artwork |
+| `src/sw.js` | Service worker source; the build stamps in a version and writes `sw.js` |
+| `manifest.webmanifest`, `icons/` | App name and icons for installing. Regenerate icons with `node scripts/icons.js` |
 | `og.png` | Social preview image. Regenerate with `node scripts/og.js` after a build |
 | `scripts/` | Build steps: optimize flags and measure colors, project the maps, merge data, write `index.html` and `map.json` |
 
@@ -39,7 +41,7 @@ npm run build
 
 Pushing to `main` runs `.github/workflows/deploy.yml`, which builds the site from source and deploys it to GitHub Pages (Settings, Pages, Source: GitHub Actions). The deployed site always comes from a fresh build; the workflow warns if the committed `index.html` or `map.json` is out of date.
 
-Any other static host works too: serve `index.html`, `map.json` and `og.png` from one folder.
+Any other static host works too: serve `index.html`, `map.json`, `og.png`, `sw.js`, `manifest.webmanifest` and `icons/` from one folder.
 
 ## License
 

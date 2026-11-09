@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Flags of the World</title>
 <meta name="description" content="Browse every flag in the world, learn them in short regional units, and test yourself with quizzes, a map game and a daily flag.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='6' y='3' width='5' height='26' rx='1' fill='%23171B24'/%3E%3Cpath d='M11 3h16l-3.5 6 3.5 6H11z' fill='%231F3F8F'/%3E%3C/svg%3E">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Flags">
 <meta name="theme-color" content="#F4F5F7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#12151B" media="(prefers-color-scheme: dark)">
 <link rel="canonical" href="https://calebsylvest.github.io/flags-of-the-world/">
@@ -829,6 +832,8 @@ function render(){
   document.title=route.v==='flag'?`Flag of ${BY[route.c].n}, Flags of the World`:route.v==='quiz'?'Quiz, Flags of the World':route.v==='daily'?'Daily flag, Flags of the World':route.v==='learn'?'Learn, Flags of the World':route.v==='unit'?`${UNITS[route.u].n}, Learn, Flags of the World`:'Flags of the World';
 }
 window.addEventListener('hashchange',render);
+// Offline support. Skipped on localhost so a cached copy never shadows other projects served on the same port.
+if('serviceWorker' in navigator&&location.protocol!=='file:'&&!/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname))addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 render();
 })();
 </script>
