@@ -37,7 +37,9 @@ npm run build
 
 ## Deploy
 
-Any static host works. For GitHub Pages: repository Settings, Pages, deploy from the `main` branch, root folder.
+Pushing to `main` runs `.github/workflows/deploy.yml`, which builds the site from source and deploys it to GitHub Pages (Settings, Pages, Source: GitHub Actions). The deployed site always comes from a fresh build; the workflow warns if the committed `index.html` or `map.json` is out of date.
+
+Any other static host works too: serve `index.html`, `map.json` and `og.png` from one folder.
 
 ## License
 
