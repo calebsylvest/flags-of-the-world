@@ -289,6 +289,7 @@ dl.facts dd{margin:0}
 .datasec p{color:var(--muted);margin:0;max-width:36em;font-size:.9375rem}
 .btn.danger{background:var(--bad);color:#fff}
 footer{border-top:1px solid var(--line);color:var(--muted);font-size:.8125rem;padding:20px 0 32px}
+footer .by{margin:0 0 6px;font-size:.9375rem;color:var(--ink)}
 @media (max-width:560px){
   .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 16px}
   .fbox{height:84px}.fbox .flag{max-height:84px}
@@ -307,7 +308,7 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:.8125rem;pa
 </div></header>
 <main id="app" class="wrap" tabindex="-1"></main>
 <div id="live" class="sr" aria-live="polite" aria-atomic="true"></div>
-<footer><div class="wrap">Flag artwork from the public-domain <a href="https://github.com/hampusborgos/country-flags">country-flags</a> collection. Country data from <a href="https://github.com/mledoze/countries">world-countries</a>, under the <a href="https://opendatacommons.org/licenses/odbl/1-0/">Open Database License</a>. Map shapes from <a href="https://www.naturalearthdata.com/">Natural Earth</a>. <a href="https://github.com/calebsylvest/flags-of-the-world">Source code</a>.</div></footer>
+<footer><div class="wrap"><p class="by">Made by <a href="https://www.calebsylvest.com">Caleb Sylvest</a></p>Flag artwork from the public-domain <a href="https://github.com/hampusborgos/country-flags">country-flags</a> collection. Country data from <a href="https://github.com/mledoze/countries">world-countries</a>, under the <a href="https://opendatacommons.org/licenses/odbl/1-0/">Open Database License</a>. Map shapes from <a href="https://www.naturalearthdata.com/">Natural Earth</a>. <a href="https://github.com/calebsylvest/flags-of-the-world">Source code</a>.</div></footer>
 <script>
 const DATA=__DATA__;
 const SVG=__SVG__;
@@ -465,7 +466,7 @@ function renderDetail(code){
   $('#back').addEventListener('click',()=>go('browse'));
   const lm=$('#locmap');if(lm)whenMap(lm,()=>{const M=mapFor([c.c]);mountMap(lm,{map:M,box:boxOf([c.c],.8,170,M),marks:{[c.c]:'sel'},ring:c.c})});
   app.querySelectorAll('[data-tag]').forEach(b=>b.addEventListener('click',()=>{Object.assign(B,{q:'',region:'',exact:false,sov:false,scroll:0});B.colors.clear();B.styles.clear();B.styles.add(b.dataset.tag);if(!STYLE_TOP.includes(b.dataset.tag))B.showStyles=true;go('browse')}));
-  $('#quizregion').addEventListener('click',e=>{e.preventDefault();Q.setup.region=QREGIONS.includes(c.r)?c.r:'';Q.session=null;go('quiz')});
+  $('#quizregion').addEventListener('click',e=>{e.preventDefault();Q.setup.region=QREGIONS.includes(c.r)?c.r:'';Q.setup.off.clear();Q.session=null;go('quiz')});
 }
 
 // map
@@ -530,12 +531,19 @@ const MODES=[
   ['map','Find on the map','See a flag, tap its country on a world map.','<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>'],
   ['fam','Flag families','Spot the flag that doesn’t belong to the family.','<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="8" r="3"/><circle cx="17" cy="8" r="3"/><circle cx="7" cy="17" r="3"/><path d="m14.5 14.5 5 5M19.5 14.5l-5 5"/></svg>'],
   ['type','Type the answer','See a flag, type the country. Small typos are accepted.','<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>']];
-const Q={setup:{mode:'name',region:'',len:10,sov:true,pick:'smart'},session:null};
+const Q={setup:{mode:'name',region:'',off:new Set(),len:10,sov:true,pick:'smart'},session:null};
+// Flag groups are the Learn units. Choosing a region selects all of its groups; Q.setup.off holds the ones deselected.
+const unitsIn=r=>DATA.units.filter(u=>u.r===r);
+const groupsApply=s=>!!s.region&&s.mode!=='fam';
+// Country codes in the selected groups, or null when every group is selected (then the whole region is used).
+function groupCodes(s){if(!groupsApply(s)||!s.off.size)return null;return new Set(unitsIn(s.region).filter(u=>!s.off.has(u.id)).flatMap(u=>u.m))}
 const DAY=864e5,IV=[0,6e5,DAY,3*DAY,7*DAY,21*DAY];
 function srsOf(k){return store.srs[k]}
 function level(k){const r=store.srs[k];return !r?'new':r.b>=4?'mastered':'learning'}
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function poolFor(s){if(s.mode==='fam')return Object.keys(DATA.fam);if(s.mode==='map')return C.filter(c=>hasMap(c.c)&&(!s.region||c.r===s.region)&&(!s.sov||c.ind));if(s.mode==='look')return C.filter(c=>c.look.length&&(!s.region||c.r===s.region));return C.filter(c=>(!s.region||c.r===s.region)&&(!s.sov||c.ind))}
+function poolFor(s){if(s.mode==='fam')return Object.keys(DATA.fam);const g=groupCodes(s);
+  const inArea=c=>g?g.has(c.c):(!s.region||c.r===s.region)&&(s.mode==='look'||!s.sov||c.ind);
+  return C.filter(c=>inArea(c)&&(s.mode!=='map'||hasMap(c.c))&&(s.mode!=='look'||c.look.length))}
 function smartOrder(pool){const now=Date.now();const due=[],fresh=[],rest=[];pool.forEach(c=>{const r=store.srs[c.c];if(!r)fresh.push(c);else if(r.d<=now)due.push(c);else rest.push(c)});due.sort((a,b)=>store.srs[a.c].d-store.srs[b.c].d);rest.sort((a,b)=>store.srs[a.c].d-store.srs[b.c].d);return [...due,...shuffle(fresh),...rest]}
 function optsFor(t,mode,dpool){if(mode==='type'||mode==='map')return null;if(mode==='look'){const g=shuffle(t.look.map(k=>BY[k]).filter(Boolean)).slice(0,3);const rest=distractors(t,dpool.filter(c=>!g.includes(c)),3-g.length).filter(c=>c!==t);return shuffle([t,...g,...rest.slice(0,3-g.length)])}return distractors(t,dpool)}
 function distractors(t,pool,n=3){
@@ -558,7 +566,9 @@ function startQuiz(onlyCodes){
   const n=s.len==='all'?pool.length:s.len;
   let items=onlyCodes?onlyCodes.map(k=>BY[k]):(s.pick==='smart'?smartOrder(pool):shuffle(pool)).slice(0,n);
   const dpool=s.mode==='look'?C:(pool.length>=4?pool:C);
-  Q.session={mode:s.mode,region:s.region,retry:!!onlyCodes,smart:s.pick==='smart'&&!onlyCodes,dpool,box:s.mode==='map'?regionBox(s.region):null,mapset:s.mode==='map'&&s.region==='Oceania'?'p':'w',items:items.map(t=>({t,opts:optsFor(t,s.mode,dpool),ans:null,ok:null})),i:0,score:0,done:false};
+  const g=groupCodes(s);const groups=g?unitsIn(s.region).filter(u=>!s.off.has(u.id)).map(u=>u.id):null;
+  const mapset=s.mode==='map'&&s.region==='Oceania'?'p':'w';
+  Q.session={mode:s.mode,region:s.region,groups,retry:!!onlyCodes,smart:s.pick==='smart'&&!onlyCodes,dpool,box:s.mode!=='map'?null:g?boxOf([...g],.12,120,mapset==='p'?PAC:MAP):regionBox(s.region),mapset,items:items.map(t=>({t,opts:optsFor(t,s.mode,dpool),ans:null,ok:null})),i:0,score:0,done:false};
   renderQuiz();
 }
 function renderQuiz(){
@@ -571,20 +581,21 @@ function renderSetup(msg=''){
   const lv={mastered:0,learning:0,new:0};if(s.mode!=='fam')pool.forEach(c=>lv[level(c.c)]++);const now=Date.now();const due=pool.filter(c=>{const r=store.srs[c.c];return r&&r.d<=now}).length;const P=pool.length||1;
   app.innerHTML=`<div class="qwrap">
     <h1>Test yourself</h1>
-    <p class="lede">Pick a way to play, narrow it to a region if you like, and go.</p>
+    <p class="lede">Pick a way to play, narrow it to a region or a few flag groups if you like, and go.</p>
     <div class="modes" role="group" aria-label="Quiz type">${MODES.map(([k,t,d,ic])=>`<button class="mode" data-mode="${k}" aria-pressed="${s.mode===k}"><span class="ic" aria-hidden="true">${ic}</span><b>${t}</b><span>${d}</span></button>`).join('')}</div>
     <div class="qopts">
       ${s.mode==='fam'?'':`<div class="frow"><span class="flabel" id="ql-r">Region</span><div class="chips" role="group" aria-labelledby="ql-r"><button class="chip" data-qr="" aria-pressed="${!s.region}">Whole world</button>${QREGIONS.map(r=>`<button class="chip" data-qr="${r}" aria-pressed="${s.region===r}">${r}</button>`).join('')}</div></div>`}
+      ${groupsApply(s)?`<div class="frow"><span class="flabel" id="ql-g">Groups</span><div class="chips" role="group" aria-labelledby="ql-g">${unitsIn(s.region).map(u=>`<button class="chip" data-qg="${u.id}" aria-pressed="${!s.off.has(u.id)}">${esc(u.n)}</button>`).join('')}</div></div>`:''}
       <div class="frow"><span class="flabel" id="ql-l">Questions</span><div class="chips" role="group" aria-labelledby="ql-l">${(s.mode==='fam'?[10,20]:[10,20,'all']).map(v=>`<button class="chip" data-ql="${v}" aria-pressed="${String(s.len)===String(v)}">${v==='all'?`All ${pool.length}`:v}</button>`).join('')}</div></div>
       ${s.mode==='fam'?'':`<div class="frow"><span class="flabel" id="ql-p">Order</span><div class="chips" role="group" aria-labelledby="ql-p"><button class="chip" data-qp="smart" aria-pressed="${s.pick==='smart'}">Smart review</button><button class="chip" data-qp="random" aria-pressed="${s.pick==='random'}">Random</button></div></div>`}
-      ${s.mode==='look'||s.mode==='fam'?'':`<div class="frow"><label class="toggle"><input type="checkbox" id="qsov"${s.sov?' checked':''}> Sovereign states only</label></div>`}
+      ${s.mode==='look'||s.mode==='fam'||groupCodes(s)?'':`<div class="frow"><label class="toggle"><input type="checkbox" id="qsov"${s.sov?' checked':''}> Sovereign states only</label></div>`}
     </div>
     ${s.mode==='fam'?`<section class="progress"><p>Each round shows four flags. Three belong to a family that shares a history, like the Pan-African colors or the Nordic crosses. Find the one that doesn’t.</p></section>`:`<section class="progress" aria-label="Your progress">
       <div class="pbar" aria-hidden="true"><span class="pm" style="width:${lv.mastered/P*100}%"></span><span class="pl" style="width:${lv.learning/P*100}%"></span></div>
       <dl class="pstats"><div><dt>Mastered</dt><dd>${lv.mastered}</dd></div><div><dt>Learning</dt><dd>${lv.learning}</dd></div><div><dt>New</dt><dd>${lv.new}</dd></div><div><dt>Due now</dt><dd>${due}</dd></div></dl>
       <p>${s.pick==='smart'?'Smart review starts with flags that are due, then brings in new ones. A flag counts as mastered after four correct answers in a row, spaced out over days. Missed flags come back later in the same round.':'Random picks flags from the set in no particular order. Your answers still count toward your progress.'}</p>
     </section>`}
-    ${pool.length?`<button class="btn" id="start">Start quiz</button>`:`<p class="lede">${s.mode==='look'?'No lookalike flags in this region. Pick another region.':'No flags match these settings. Pick another region or turn off Sovereign states only.'}</p>`}
+    ${pool.length?`<button class="btn" id="start">Start quiz</button>`:`<p class="lede">${groupsApply(s)&&s.off.size===unitsIn(s.region).length?'Pick at least one group.':s.mode==='look'?(groupCodes(s)?'No lookalike flags in these groups. Pick other groups.':'No lookalike flags in this region. Pick another region.'):'No flags match these settings. Pick another region or turn off Sovereign states only.'}</p>`}
     <section class="datasec" aria-labelledby="dh"><h2 id="dh">Your progress</h2>
       <p>Progress is saved in this browser only. Export it to keep a copy or move it to another browser. Importing replaces the progress here.</p>
       <div class="qnext"><button class="btn ghost" id="exp">Export</button><button class="btn ghost" id="imp">Import</button><input type="file" id="impf" accept="application/json,.json" hidden><button class="btn ghost" id="reset">Reset progress</button></div>
@@ -592,7 +603,8 @@ function renderSetup(msg=''){
   </div>`;
   if(s.mode==='map')loadMap().catch(()=>{});
   app.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{s.mode=b.dataset.mode;renderSetup()}));
-  app.querySelectorAll('[data-qr]').forEach(b=>b.addEventListener('click',()=>{s.region=b.dataset.qr;renderSetup()}));
+  app.querySelectorAll('[data-qr]').forEach(b=>b.addEventListener('click',()=>{if(s.region!==b.dataset.qr)s.off.clear();s.region=b.dataset.qr;renderSetup()}));
+  app.querySelectorAll('[data-qg]').forEach(b=>b.addEventListener('click',()=>{const id=b.dataset.qg;s.off.has(id)?s.off.delete(id):s.off.add(id);renderSetup();const nb=app.querySelector(`[data-qg="${id}"]`);if(nb)nb.focus({preventScroll:true})}));
   app.querySelectorAll('[data-ql]').forEach(b=>b.addEventListener('click',()=>{s.len=b.dataset.ql==='all'?'all':+b.dataset.ql;renderSetup()}));
   app.querySelectorAll('[data-qp]').forEach(b=>b.addEventListener('click',()=>{s.pick=b.dataset.qp;renderSetup()}));
   const qs=$('#qsov');if(qs)qs.addEventListener('change',e=>{s.sov=e.target.checked;renderSetup()});
@@ -661,7 +673,7 @@ function renderResults(){
   const S=Q.session;const done=S.items.filter(x=>x.ans!==null);const n=done.length;const seen=new Set();const missed=done.filter(x=>!x.ok&&!seen.has(x.t.c)&&seen.add(x.t.c));
   const pct=n?Math.round(S.score/n*100):0;
   // retry rounds only contain flags just seen, so they don't count toward the best score
-  const mk=S.mode+'|'+(S.region||'world');if(n>=10&&!S.quit&&!S.retry){const b=store.best[mk];if(!b||pct>b){store.best[mk]=pct;save()}}
+  const mk=S.mode+'|'+(S.region||'world')+(S.groups?'|'+S.groups.join(','):'');if(n>=10&&!S.quit&&!S.retry){const b=store.best[mk];if(!b||pct>b){store.best[mk]=pct;save()}}
   const best=store.best[mk];
   app.innerHTML=`<div class="qwrap">
     <h1>${n?(pct===100?'Perfect round':pct>=80?'Strong round':pct>=50?'Good start':'Keep practicing'):'Quiz ended'}</h1>

@@ -119,3 +119,46 @@ test('install and offline files are served and filled in',async({page,request})=
   const mapUrl=sw.match(/'(map\.json\?v=\w+)'/)[1];
   expect((await request.get(mapUrl)).ok()).toBe(true);
 });
+
+test('footer credits the author',async({page})=>{
+  await page.goto('/');
+  await expect(page.locator('footer .by a')).toHaveAttribute('href','https://www.calebsylvest.com');
+  await expect(page.locator('footer .by')).toHaveText('Made by Caleb Sylvest');
+});
+
+test('quiz flag groups appear for a region, start selected, and narrow the quiz',async({page})=>{
+  await page.goto('/#quiz');
+  await page.click('[data-mode="name"]');
+  await expect(page.locator('[data-qg]')).toHaveCount(0); // Whole world: no groups
+  await page.click('[data-qr="Americas"]');
+  const groups=page.locator('[data-qg]');
+  await expect(groups).toHaveCount(6);
+  await expect(page.locator('[data-qg][aria-pressed="true"]')).toHaveCount(6);
+  await expect(page.locator('#qsov')).toBeVisible(); // all selected: same as the whole region
+  // keep only North America (3) and Central America (7)
+  for(const id of await groups.evaluateAll(bs=>bs.map(b=>b.dataset.qg)))
+    if(!['north-america','central-america'].includes(id))await page.click(`[data-qg="${id}"]`);
+  await expect(page.locator('[data-qg][aria-pressed="true"]')).toHaveCount(2);
+  await expect(page.locator('[data-ql="all"]')).toHaveText('All 10');
+  await expect(page.locator('#qsov')).toHaveCount(0); // groups are countries only
+  await page.click('[data-ql="all"]');
+  await page.click('#start');
+  await expect(page.locator('.qprog')).toContainText('of 10');
+  // switching region resets the groups to all selected
+  await page.click('#quit');await page.click('#again');
+  await page.click('[data-qr="Europe"]');
+  await expect(page.locator('[data-qg][aria-pressed="false"]')).toHaveCount(0);
+  // deselecting every group asks for one
+  for(const b of await page.locator('[data-qg]').all())await b.click();
+  await expect(page.locator('#start')).toHaveCount(0);
+  await expect(page.locator('.qwrap')).toContainText('Pick at least one group.');
+});
+
+test('map quiz works with a group selection',async({page})=>{
+  await page.goto('/#quiz');
+  await page.click('[data-mode="map"]');
+  await page.click('[data-qr="Oceania"]');
+  await page.click('[data-qg]'); // drop the first Oceania group
+  await page.click('#start');
+  await expect(page.locator('#qmap svg')).toBeVisible();
+});
