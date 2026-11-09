@@ -36,6 +36,7 @@ a{color:var(--accent)}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:4px}
 .wrap{max-width:1200px;margin:0 auto;padding:0 20px}
 [hidden]{display:none!important}
+#app:focus,#app h1:focus{outline:none}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 /* header */
@@ -287,6 +288,7 @@ footer{border-top:1px solid var(--line);color:var(--muted);font-size:.8125rem;pa
   <nav aria-label="Main"><a href="#browse" id="nav-browse">Browse</a><a href="#learn" id="nav-learn">Learn</a><a href="#quiz" id="nav-quiz">Quiz</a><a href="#daily" id="nav-daily">Daily</a></nav>
 </div></header>
 <main id="app" class="wrap" tabindex="-1"></main>
+<div id="live" class="sr" aria-live="polite" aria-atomic="true"></div>
 <footer><div class="wrap">Flag artwork from the public-domain country-flags collection. Country data from the world-countries dataset.</div></footer>
 <script>
 const DATA=__DATA__;
@@ -305,6 +307,9 @@ const COLORS=[['red','#D52B1E'],['orange','#F08A1C'],['yellow','#F6C800'],['gree
 const CNAME={red:'Red',orange:'Orange',yellow:'Yellow',green:'Green',blue:'Blue',purple:'Purple',white:'White',black:'Black'};
 const SORTS=[['name','Name, A to Z'],['name-desc','Name, Z to A'],['area-desc','Largest area first'],['area','Smallest area first'],['colors','Fewest colors first'],['colors-desc','Most colors first']];
 const app=$('#app');
+// One persistent live region: regions created inside #app by innerHTML are not reliably announced.
+const live=$('#live');function announce(t){live.textContent='';if(t)setTimeout(()=>{live.textContent=t},60)}
+const textOf=sel=>[...app.querySelectorAll(sel)].map(e=>e.textContent.trim()).filter(Boolean).join(' ');
 
 // storage
 const KEY='fotw-v1';
@@ -580,14 +585,14 @@ function renderQuestion(){
   const S=Q.session;const it=S.items[S.i];const t=it.t;const n=S.items.length;const answered=it.ans!==null;
   let body='';
   if(S.mode==='map'){
-    body=`<p class="prompt">Where does this flag fly?</p><div class="qflag sm">${img(t,'flag','Flag to identify').replace('loading="lazy"','')}</div><div class="qmap" id="qmap"></div><p class="maphint">Tap a country. Drag to move, pinch or scroll to zoom. Small countries are marked with dots.</p>`;
+    body=`<p class="prompt">Where does this flag fly?</p><div class="qflag sm">${img(t,'flag','Flag to identify').replace('loading="lazy"','')}</div><div class="qmap" id="qmap"></div><p class="maphint">Tap a country. Drag to move, pinch or scroll to zoom. Small countries are marked with dots.</p>${answered?'':`<form class="typed" id="mform" autocomplete="off" style="margin-top:14px"><label class="sr" for="min">Or type the country</label><input id="min" list="mlist" placeholder="Or type the country" autocapitalize="words" spellcheck="false" enterkeyhint="done"><button class="btn ghost">Answer</button></form><datalist id="mlist">${C.filter(c=>hasMap(c.c)).map(c=>`<option value="${esc(c.n)}">`).join('')}</datalist><p class="dmsg" id="mmsg"></p>`}`;
   }else if(S.mode==='find'||S.mode==='fam'){
     const F=S.mode==='fam'?DATA.fam[it.fam]:null;
     body=`<p class="prompt">${F?`Which flag isn’t part of ${esc(F.n)}?`:esc(t.n)}</p><div class="answers flags">${it.opts.map((o,i)=>{
       const cls=answered?(o.c===t.c?' ok':(o.c===it.ans?' no':'')):'';
       return `<button class="ans fl${cls}" data-pick="${o.c}"${answered?' disabled':''} aria-label="Option ${i+1}${answered?': '+esc(o.n):''}"><kbd aria-hidden="true">${i+1}</kbd>${img(o,'flag','')}<span class="cap">${answered?esc(o.n):''}</span></button>`}).join('')}</div>`;
   }else{
-    body=`<p class="prompt" aria-live="polite">${S.mode==='type'?'Which country is this?':'Whose flag is this?'}</p><div class="qflag">${img(t,'flag','Flag to identify').replace('loading="lazy"','')}</div>`;
+    body=`<p class="prompt">${S.mode==='type'?'Which country is this?':'Whose flag is this?'}</p><div class="qflag">${img(t,'flag','Flag to identify').replace('loading="lazy"','')}</div>`;
     if(S.mode==='name'||S.mode==='look'){
       body+=`<div class="answers names">${it.opts.map((o,i)=>{const cls=answered?(o.c===t.c?' ok':(o.c===it.ans?' no':'')):'';return `<button class="ans${cls}" data-pick="${o.c}"${answered?' disabled':''}><kbd aria-hidden="true">${i+1}</kbd>${esc(o.n)}</button>`}).join('')}</div>`;
     }else{
@@ -607,13 +612,14 @@ function renderQuestion(){
     <div class="qprog"><span>Question <b>${S.i+1}</b> of ${n}</span><span>Score <b>${S.score}</b></span></div>
     <div class="bar" aria-hidden="true"><span style="width:${(S.i+(answered?1:0))/n*100}%"></span></div>
     ${body}
-    <div aria-live="polite">${fb}</div>
+    <div>${fb}</div>
     <div class="qnext">${answered?`<button class="btn" id="next">${S.i+1<n?'Next question':'See results'}</button>`:''}<button class="btn ghost" id="quit">End quiz</button></div>
   </div>`;
   app.querySelectorAll('[data-pick]').forEach(b=>b.addEventListener('click',()=>answer(b.dataset.pick)));
   const qm=$('#qmap');if(qm){const start=S.view||S.box;const marks=answered?(it.ok?{[t.c]:'ok'}:{[t.c]:'ok',[it.ans]:'no'}):{};
     const QM=S.mapset==='p'&&(PAC.shapes[t.c]||PAC.pts[t.c])?PAC:MAP;const m=mountMap(qm,{map:QM,box:QM===PAC||S.mapset!=='p'?start:{x:0,y:0,w:MAP.W,h:MAP.H},marks,ring:answered?t.c:null,interactive:true,onView:v=>{S.view=v},onPick:k=>{if(it.ans===null)answer(k)}});
     if(answered)m.flyTo(boxOf(it.ok?[t.c]:[t.c,it.ans],.6,140,QM));else if(S.view){m.flyTo(S.box)}}
+  const mf=$('#mform');if(mf)mf.addEventListener('submit',e=>{e.preventDefault();const k=whichCountry($('#min').value);if(!k){$('#mmsg').textContent='Pick a country from the list.';announce('Pick a country from the list.');$('#min').focus();return}answer(k)});
   const f=$('#tform');if(f){f.addEventListener('submit',e=>{e.preventDefault();const v=$('#tin').value.trim();if(!v){$('#tin').focus();return}answer(v)});$('#skip').addEventListener('click',()=>answer(''));if(!answered)$('#tin').focus({preventScroll:true})}
   const nx=$('#next');if(nx){nx.addEventListener('click',next);nx.focus({preventScroll:true})}
   $('#quit').addEventListener('click',()=>{Q.session.done=true;Q.session.quit=true;renderResults()});
@@ -623,7 +629,7 @@ function answer(v){
   let ok;if(S.mode==='type'){ok=v?matchTyped(v,it.t):false}else ok=v===it.t.c;
   it.ans=v;it.ok=ok;if(ok)S.score++;if(S.mode!=='fam')record(it.t,ok);
   if(!ok&&S.smart&&!it.again&&S.items.length-S.i>1){const at=Math.min(S.items.length,S.i+4);S.items.splice(at,0,{t:it.t,opts:optsFor(it.t,S.mode,S.dpool),ans:null,ok:null,again:true})}
-  renderQuestion();
+  renderQuestion();announce(textOf('.feedback,.tip'));
 }
 function next(){const S=Q.session;S.view=null;if(S.i+1<S.items.length){S.i++;renderQuestion();window.scrollTo(0,0)}else{S.done=true;renderResults()}}
 function renderResults(){
@@ -713,7 +719,7 @@ function practiceHTML(u){
     <div class="bar" aria-hidden="true"><span style="width:${(u.m.length-P.q.length+(answered&&P.ans===k?1:0))/u.m.length*100}%"></span></div>
     <p class="prompt">Whose flag is this?</p><div class="qflag">${img(c,'flag','Flag to identify').replace('loading="lazy"','')}</div>
     <div class="answers names">${P.opts.map((o,i)=>{const cls=answered?(o===k?' ok':(o===P.ans?' no':'')):'';return `<button class="ans${cls}" data-lp="${o}"${answered?' disabled':''}>${i<9?`<kbd aria-hidden="true">${i+1}</kbd>`:''}${esc(BY[o].n)}</button>`}).join('')}</div>
-    <div aria-live="polite">${fb}</div>
+    <div>${fb}</div>
     ${answered?`<div class="qnext"><button class="btn" id="lnext">${P.q.length===1&&P.ans===k?'Finish':'Next'}</button></div>`:''}`;
 }
 function bindPractice(u){
@@ -723,7 +729,7 @@ function bindPractice(u){
 }
 function lAnswer(u,v){const P=L.pr;if(P.ans!==null)return;const k=P.q[0];const ok=v===k;P.ans=v;
   if(!P.first.has(k)){P.first.add(k);if(!ok)P.miss.add(k)}
-  record(BY[k],ok);renderUnit(u.id)}
+  record(BY[k],ok);renderUnit(u.id);announce(textOf('.feedback,.tip'))}
 document.addEventListener('keydown',e=>{if(route.v!=='unit'||e.metaKey||e.ctrlKey||e.altKey)return;if(document.activeElement&&document.activeElement.tagName==='INPUT')return;
   if(L.step==='meet'){if(e.key==='ArrowRight'){const b=$('#nxt');if(b)b.click()}if(e.key==='ArrowLeft'){const b=$('#prev');if(b&&!b.disabled)b.click()}}
   if(L.step==='practice'&&L.pr&&L.pr.ans===null&&/^[1-9]$/.test(e.key)){const u=UNITS[L.id];const o=L.pr.opts&&L.pr.opts[+e.key-1];if(o)lAnswer(u,o)}});
@@ -755,13 +761,15 @@ function renderDaily(msg=''){
       <div class="qnext"><button class="btn" id="share">Share result</button><a class="btn ghost" href="#quiz">Practice in the quiz</a></div><p class="dmsg" id="dmsg" style="color:var(--muted)"></p>
       <dl class="dstats"><div><dt>Played</dt><dd>${S.played}</dd></div><div><dt>Won</dt><dd>${S.pct}%</dd></div><div><dt>Streak</dt><dd>${S.cur}</dd></div><div><dt>Best streak</dt><dd>${S.best}</dd></div></dl>`
     :`<form class="typed" id="dform" autocomplete="off" style="margin-top:18px"><label class="sr" for="din">Your guess</label><input id="din" list="dlist" placeholder="Guess a country" autocapitalize="words" spellcheck="false" enterkeyhint="go"><button class="btn">Guess</button></form>
-      <datalist id="dlist">${C.filter(c=>c.ind).map(c=>`<option value="${esc(c.n)}">`).join('')}</datalist><p class="dmsg" role="alert">${esc(msg)}</p>`}
+      <datalist id="dlist">${C.filter(c=>c.ind).map(c=>`<option value="${esc(c.n)}">`).join('')}</datalist><p class="dmsg">${esc(msg)}</p>`}
     <div class="guesses">${rows}</div>
   </div>`;
   const f=$('#dform');if(f){f.addEventListener('submit',e=>{e.preventDefault();const k=whichCountry($('#din').value);
-    if(!k){renderDaily('Pick a country from the list.');$('#din').focus();return}
-    if(st.g.includes(k)){renderDaily('You already guessed that one.');$('#din').focus();return}
-    st.g.push(k);if(k===code){st.done=true;st.win=true}else if(st.g.length>=6)st.done=true;store.daily[day]=st;save();renderDaily();const di=$('#din');if(di)di.focus({preventScroll:true})})}
+    if(!k){renderDaily('Pick a country from the list.');announce('Pick a country from the list.');$('#din').focus();return}
+    if(st.g.includes(k)){renderDaily('You already guessed that one.');announce('You already guessed that one.');$('#din').focus();return}
+    st.g.push(k);if(k===code){st.done=true;st.win=true}else if(st.g.length>=6)st.done=true;store.daily[day]=st;save();renderDaily();
+    const g=k!==code&&BY[k].ge&&t.ge?geo(BY[k].ge,t.ge):null;announce(st.done?textOf('.feedback'):`${BY[k].n} is wrong${g?`, ${Math.round(g.d).toLocaleString('en-US')} km away`:''}. ${6-st.g.length} guesses left.`);
+    const di=$('#din');if(di)di.focus({preventScroll:true})})}
   const sh=$('#share');if(sh)sh.addEventListener('click',async()=>{const sq=st.g.map(k=>k===code?'🟩':(BY[k].ge&&t.ge&&geo(BY[k].ge,t.ge).d<1500?'🟨':'⬛')).join('');
     const text=`Flags of the World, daily flag ${num}: ${st.win?st.g.length:'X'}/6\n${sq}\n${location.origin}${location.pathname}#daily`;
     try{if(navigator.share){await navigator.share({text});return}await navigator.clipboard.writeText(text);$('#dmsg').textContent='Result copied. Paste it anywhere.'}catch(e){$('#dmsg').textContent=text}});
@@ -782,7 +790,7 @@ function matchTyped(v,t){
 }
 
 // routing
-let route={v:'browse'};
+let route={v:'browse'};let booted=false;
 function go(v){if(location.hash.slice(1)===v)render();else location.hash=v}
 function render(){
   const h=location.hash.slice(1);const prev=route.v;
@@ -794,6 +802,8 @@ function render(){
   else if(h==='daily'){route={v:'daily'};renderDaily();window.scrollTo(0,0)}
   else{route={v:'browse'};renderBrowse();if(prev==='flag')requestAnimationFrame(()=>window.scrollTo(0,B.scroll))}
   const navs={browse:$('#nav-browse'),learn:$('#nav-learn'),unit:$('#nav-learn'),quiz:$('#nav-quiz'),daily:$('#nav-daily')};Object.values(navs).forEach(n=>n.removeAttribute('aria-current'));(navs[route.v]||navs.browse).setAttribute('aria-current','page');
+  // move focus to the new view's heading so screen readers announce the page change
+  if(booted&&!app.contains(document.activeElement)){const h=app.querySelector('h1');if(h){h.tabIndex=-1;h.focus({preventScroll:true})}else app.focus({preventScroll:true})}booted=true;
   document.title=route.v==='flag'?`Flag of ${BY[route.c].n}, Flags of the World`:route.v==='quiz'?'Quiz, Flags of the World':route.v==='daily'?'Daily flag, Flags of the World':route.v==='learn'?'Learn, Flags of the World':route.v==='unit'?`${UNITS[route.u].n}, Learn, Flags of the World`:'Flags of the World';
 }
 window.addEventListener('hashchange',render);
