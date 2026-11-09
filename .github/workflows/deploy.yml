@@ -30,6 +30,17 @@ jobs:
           if ! git diff --quiet -- index.html map.json sw.js; then
             echo "::warning::index.html, map.json or sw.js in the repo doesn't match a fresh build. Run npm run build and commit. The deployed site uses the fresh build."
           fi
+      - name: Install browser for tests
+        run: npx playwright install --with-deps chromium
+      - name: Smoke tests
+        run: npm test
+      - name: Upload test traces
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7
       - name: Collect site files
         run: mkdir _site && cp -r index.html map.json og.png sw.js manifest.webmanifest icons _site/
       - uses: actions/upload-pages-artifact@v5

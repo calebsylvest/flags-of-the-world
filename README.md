@@ -37,9 +37,18 @@ npm run build
 | `og.png` | Social preview image. Regenerate with `node scripts/og.js` after a build |
 | `scripts/` | Build steps: optimize flags and measure colors, project the maps, merge data, write `index.html` and `map.json` |
 
+## Test
+
+Smoke tests drive the built site in a real browser (desktop and phone sizes) and use each feature once: browse, a flag page, every quiz mode, a full round, Learn, Daily, and the offline files. A test fails if the page logs an error.
+
+```sh
+npx playwright install chromium   # once
+npm run build && npm test
+```
+
 ## Deploy
 
-Pushing to `main` runs `.github/workflows/deploy.yml`, which builds the site from source and deploys it to GitHub Pages (Settings, Pages, Source: GitHub Actions). The deployed site always comes from a fresh build; the workflow warns if the committed `index.html` or `map.json` is out of date.
+Pushing to `main` runs `.github/workflows/deploy.yml`, which builds the site from source, runs the smoke tests, and deploys it only if they pass to GitHub Pages (Settings, Pages, Source: GitHub Actions). The deployed site always comes from a fresh build; the workflow warns if the committed `index.html` or `map.json` is out of date.
 
 Any other static host works too: serve `index.html`, `map.json`, `og.png`, `sw.js`, `manifest.webmanifest` and `icons/` from one folder.
 

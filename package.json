@@ -5,9 +5,11 @@
   "description": "Browse, learn and quiz yourself on every flag in the world. Builds to a single static index.html.",
   "scripts": {
     "build": "node scripts/process.js && node scripts/map.mjs && node scripts/build.js && node scripts/assemble.js",
-    "serve": "npx --yes serve ."
+    "serve": "npx --yes serve .",
+    "test": "playwright test"
   },
   "devDependencies": {
+    "@playwright/test": "1.65.0",
     "@resvg/resvg-js": "2.6.2",
     "d3-geo": "3.1.2",
     "svgo": "4.1.0",
