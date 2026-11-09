@@ -559,7 +559,7 @@ function renderSetup(){
   const qs=$('#qsov');if(qs)qs.addEventListener('change',e=>{s.sov=e.target.checked;renderSetup()});
   const st=$('#start');if(st)st.addEventListener('click',()=>startQuiz());
 }
-function record(t,ok){const r=store.stats[t.c]||(store.stats[t.c]={s:0,c:0});r.s++;if(ok)r.c++;const q=store.srs[t.c]||{b:0,d:0};const now=Date.now();if(!ok){q.b=1;q.d=now}else if(q.d<=now){q.b=Math.min(5,q.b+1);q.d=now+IV[q.b]}store.srs[t.c]=q;save()}
+function record(t,ok){const r=store.stats[t.c]||(store.stats[t.c]={s:0,c:0});r.s++;if(ok)r.c++;const q=store.srs[t.c]||{b:0,d:0};const now=Date.now();if(!ok){q.b=0;q.d=now}else if(q.d<=now){q.b=Math.min(5,q.b+1);q.d=now+IV[q.b]}store.srs[t.c]=q;save()}
 function renderQuestion(){
   const S=Q.session;const it=S.items[S.i];const t=it.t;const n=S.items.length;const answered=it.ans!==null;
   let body='';
